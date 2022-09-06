@@ -93,8 +93,10 @@ void procession::transpose()
 	int temp;
 	for (unsigned i = 0; i < m_N - 1; ++i)
 	{
-		for (unsigned j = 1; j < m_N; ++j)
+		for (unsigned j = 0; j < m_N; ++j)
 		{
+			if (i > j)
+				continue;
 			temp = m_procession[i][j];
 			m_procession[i][j] = m_procession[j][i];
 			m_procession[j][i] = temp;
