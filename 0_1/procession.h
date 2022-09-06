@@ -133,7 +133,19 @@ int procession::cal_diterminant() const
 
 void procession::reSet()
 {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dis(0, 2);
 
+	for (unsigned i = 0; i < m_N; ++i)
+	{
+		for (unsigned j = 0; j < m_N; ++j)
+		{
+			m_procession[i][j] = dis(gen);
+		}
+	}
+
+	m_diterminant = cal_diterminant();
 }
 
 void add(const procession& p1, const procession& p2)
