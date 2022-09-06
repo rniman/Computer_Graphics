@@ -6,25 +6,13 @@ int main()
 {
 	procession p1,p2;
 	
-	p1.print();
 
-	cout << "det: " << p1.getDet() << endl;
-	
-	p2.print();
 
-	cout << "det: " << p2.getDet() << endl;
+	//콘솔창 클리어
+	cout << "\x1B[2J\x1B[H";
 
-	cout << endl;
-
-	add(p1, p2);
-	cout << endl;
-
-	sub(p1, p2);
-	cout << endl;
-	mul(p1, p2);
-
-	cout << endl;
 	p1.expand();
 	p1.print();
+	cout << p1.cal_diterminant() << endl;
 	return 0;
 }

@@ -18,15 +18,35 @@ public:
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<int> dis(0, 2);
 
-		m_procession.resize(3);
+		m_procession.resize(m_N);
 
-		for (unsigned i = 0; i < 3; ++i)
+		for (unsigned i = 0; i < m_N; ++i)
 		{
 			m_procession[0].push_back(dis(gen));
 			m_procession[1].push_back(dis(gen));
 			m_procession[2].push_back(dis(gen));
 		}
 
+		m_diterminant = cal_diterminant();
+	}
+
+	procession(int col, int row, std::vector<std::vector<int>> ori,int size)
+		:m_N(size-1)
+	{
+		m_procession.resize(m_N);
+		unsigned temp = 0;
+		for (unsigned i = 0; i <= m_N; ++i)
+		{
+			if (i == col)
+				continue;
+			for (unsigned j = 0; j <= m_N; ++j)
+			{
+				if (j == row)
+					continue;
+				m_procession[temp].push_back(ori[i][j]);
+			}
+			temp++;
+		}
 		m_diterminant = cal_diterminant();
 	}
 
@@ -38,6 +58,7 @@ public:
 	int cal_diterminant() const;
 	void transpose();
 	void expand();
+	void reSet();
 
 	friend void add(const procession& p1, const procession& p2);
 	friend void sub(const procession& p1, const procession& p2);
@@ -95,6 +116,11 @@ void procession::expand()
 
 int procession::cal_diterminant() const
 {
+	if (m_N == 4)
+	{
+		return m_procession[0][0] * procession(0, 0,m_procession,m_N).cal_diterminant() + m_procession[0][1] * (-1) * procession(0, 1, m_procession, m_N).cal_diterminant()
+			+ m_procession[0][2] * procession(0, 2, m_procession, m_N).cal_diterminant() + m_procession[0][3] * (-1) * procession(0, 3, m_procession, m_N).cal_diterminant();
+	}
 	//3X3에 대해서만 되어있음
 	return(
 		m_procession[0][0] * (m_procession[1][1] * m_procession[2][2] - m_procession[2][1] * m_procession[1][2]) +
@@ -105,8 +131,19 @@ int procession::cal_diterminant() const
 	//일반적인 행렬식 구현해보기
 }
 
+void procession::reSet()
+{
+
+}
+
 void add(const procession& p1, const procession& p2)
 {
+	if (p1.m_N != p2.m_N)
+	{
+		std::cout << "Could not add" << std::endl;
+		return;
+	}
+
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
@@ -119,6 +156,12 @@ void add(const procession& p1, const procession& p2)
 
 void sub(const procession& p1, const procession& p2)
 {
+	if (p1.m_N != p2.m_N)
+	{
+		std::cout << "Could not subtract" << std::endl;
+		return;
+	}
+
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
@@ -131,6 +174,12 @@ void sub(const procession& p1, const procession& p2)
 
 void mul(const procession& p1, const procession& p2)
 {
+	if (p1.m_N != p2.m_N)
+	{
+		std::cout << "Could not multiply" << std::endl;
+		return;
+	}
+
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
