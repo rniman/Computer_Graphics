@@ -115,7 +115,7 @@ int main()
 			e_command = e_command ? false : true;
 			break;
 		case 'f':
-			
+
 			for (unsigned i = 0; i < str.size(); ++i)
 			{
 				string temp = "";
@@ -135,16 +135,42 @@ int main()
 			}
 			break;
 		case 'g':
+			cin.ignore();
+			char target, change_char;
+			cin >> target >> change_char;
+
+			for (unsigned i = 0; i < str.size(); ++i)
+			{
+				for (unsigned j = 0; j < str[i].size(); ++j)
+				{
+					if (str[i][j] == target)
+						str[i][j] = change_char;
+				}
+			}
 			break;
 
 		case 'h':
+			for (unsigned i = 0; i < str.size(); ++i)
+			{
+				string temp;
+				for (unsigned j = 0; j < str[i].size()/2; ++j)
+				{
+					if (str[i][j] != str[i][str[i].size() - 1 - j])
+						break;
+	
+					temp += str[i][j];
+				}
+				if(!temp.empty())
+					cout << str[i] << ": " << temp << endl;
+			}
+		
 			break;
 
 		default:
 			break;
 		}
 		cin.ignore();
-		cout << "\x1B[2J\x1B[H";
+		cout << endl;
 		for (auto& e : str)
 		{
 			cout << e << endl;
