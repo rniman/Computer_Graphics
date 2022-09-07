@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
+#include <algorithm>
 #include <vector>
 using namespace std;
 
@@ -114,10 +114,26 @@ int main()
 			}
 			e_command = e_command ? false : true;
 			break;
-
 		case 'f':
+			
+			for (unsigned i = 0; i < str.size(); ++i)
+			{
+				string temp = "";
+				for (unsigned j = 0; j < str[i].size(); ++j)
+				{
+					if (str[i][j] != ' ' && j != str[i].size() - 1)
+					{
+						temp += str[i][j];
+						continue;
+					}
+					for (unsigned k = 0; k < temp.size(); ++k)
+					{
+						str[i][j - temp.size() + k] = temp[temp.size() - k - 1];
+					}
+					temp = "";
+				}
+			}
 			break;
-
 		case 'g':
 			break;
 
