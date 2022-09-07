@@ -9,9 +9,9 @@ int main()
 	
 	while (1)
 	{
-		cout << "행렬1" << endl;
+		cout << "현재 행렬1" << endl;
 		p1.print();
-		cout << "행렬2" << endl;
+		cout << "현재 행렬2" << endl;
 		p2.print();
 
 		cin >> command;
@@ -40,13 +40,13 @@ int main()
 			cout << "행렬2 det: " << p2.getDet() << endl;
 			break;
 		case 't':
+			cout << "바꾸기전 행렬1" << endl;
 			p1.transpose();
+			cout << "바꾸기전 행렬2" << endl;
 			p2.transpose();
-			p1.print();
 			cout << endl;
-			p2.print();
-			cout << "행렬1 det: " << p1.getDet() << endl;
-			cout << "행렬2 det: " << p2.getDet() << endl;
+			cout << "현재 행렬1 det: " << p1.getDet() << endl;
+			cout << "현재 행렬2 det: " << p2.getDet() << endl;
 			break;
 		case 'h':
 			p1.expand();

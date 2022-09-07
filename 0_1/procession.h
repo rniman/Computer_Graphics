@@ -91,6 +91,7 @@ int procession::getDet() const
 void procession::transpose()
 {
 	int temp;
+	this->print();
 	for (unsigned i = 0; i < m_N - 1; ++i)
 	{
 		for (unsigned j = 0; j < m_N; ++j)
@@ -158,6 +159,7 @@ void add(const procession& p1, const procession& p2)
 		return;
 	}
 
+	std::cout << "Çà·Äµ¡¼À" << std::endl;
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
@@ -176,6 +178,7 @@ void sub(const procession& p1, const procession& p2)
 		return;
 	}
 
+	std::cout << "Çà·Ä»¬¼À" << std::endl;
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
@@ -194,6 +197,7 @@ void mul(const procession& p1, const procession& p2)
 		return;
 	}
 
+	std::cout << "Çà·Ä°ö¼À" << std::endl;
 	for (unsigned i = 0; i < p1.m_N; ++i)
 	{
 		for (unsigned j = 0; j < p1.m_N; ++j)
