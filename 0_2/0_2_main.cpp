@@ -27,7 +27,7 @@ int main()
 	while (!ifs.eof())
 	{
 		getline(ifs, temp);
-		str.push_back(temp);	
+		str.push_back(temp);
 	}
 	for (auto& e : str)
 	{
@@ -40,7 +40,7 @@ int main()
 	int number_num = 0;
 	int capital_num = 0;
 
-	while(ifs >> word)
+	while (ifs >> word)
 	{
 		for (unsigned i = 0; i < word.size(); ++i)
 		{
@@ -64,8 +64,8 @@ int main()
 		}
 	}
 	cout << endl;
-	cout <<"단어의 개수: "<< word_num << endl;
-	cout <<"숫자의 개수: "<< number_num << endl;
+	cout << "단어의 개수: " << word_num << endl;
+	cout << "숫자의 개수: " << number_num << endl;
 	cout << "대문자를 포함한 단어의 개수: " << capital_num << endl;
 
 	char command;
@@ -153,11 +153,11 @@ int main()
 			for (unsigned i = 0; i < str.size(); ++i)
 			{
 				string temp;
-				for (unsigned j = 0; j < str[i].size()/2; ++j)
+				for (unsigned j = 0; j < str[i].size() / 2; ++j)
 				{
 					if (str[i][j] != str[i][str[i].size() - 1 - j])
 						break;
-	
+
 					temp += str[i][j];
 				}
 				if (!temp.empty())
@@ -166,7 +166,7 @@ int main()
 					cout << str[i] << ": " << temp << endl;
 				}
 			}
-		
+
 			break;
 
 		default:
@@ -180,7 +180,7 @@ int main()
 		}
 		cin >> command;
 	}
-	
+
 
 	return 0;
 }
