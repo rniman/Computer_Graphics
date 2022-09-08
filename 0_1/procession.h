@@ -107,6 +107,12 @@ void procession::transpose()
 
 void procession::expand()
 {
+	if (m_N != 3)
+	{
+		std::cout << "변환 불가" << std::endl;
+		return;
+	}
+
 	m_N = 4;
 	m_procession.resize(4);
 	for (unsigned i = 0; i < m_N - 1; ++i)
