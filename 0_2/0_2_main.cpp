@@ -160,8 +160,11 @@ int main()
 	
 					temp += str[i][j];
 				}
-				if(!temp.empty())
+				if (!temp.empty())
+				{
+					cout << endl;
 					cout << str[i] << ": " << temp << endl;
+				}
 			}
 		
 			break;
