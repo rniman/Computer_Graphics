@@ -229,13 +229,21 @@ int main()
 
 	//printMap(map);
 
-	cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
+	//cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
 	while (1)
 	{
 
 		if (me.move())
 		{
-			cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
+			//cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
+			if (me.getValueWalk() % 10 == 0)
+			{
+				cout << endl;
+				cout << endl;
+				printMap(map);
+				cout << endl;
+				cout << endl;
+			}
 			map[me.getValueY()][me.getValueX()] = me.getValueWalk();
 		}
 
@@ -258,13 +266,13 @@ int main()
 			memset(map, 0, sizeof(map));
 			me.reset();
 
-			cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
+			//cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
 			while (1)
 			{
 
 				if (me.move())
 				{
-					cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
+					//cout << me.getValueWalk() << "번째: " << me.getValueX() << ", " << me.getValueY() << endl;
 					map[me.getValueY()][me.getValueX()] = me.getValueWalk();
 				}
 
