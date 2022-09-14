@@ -185,8 +185,6 @@ int main()
 	int choiceNum = 0;
 	int score = 0;
 
-
-
 	while (1)
 	{
 		if (findAll(card))
