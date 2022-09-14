@@ -236,14 +236,14 @@ int main()
 		if (me.move())
 		{
 			//cout << me.getValueWalk() << "¹øÂ°: " << me.getValueX() << ", " << me.getValueY() << endl;
-			if (me.getValueWalk() % 10 == 0)
-			{
-				cout << endl;
-				cout << endl;
-				printMap(map);
-				cout << endl;
-				cout << endl;
-			}
+			//if (me.getValueWalk() % 10 == 0)
+			//{
+			//	cout << endl;
+			//	cout << endl;
+			//	printMap(map);
+			//	cout << endl;
+			//	cout << endl;
+			//}
 			map[me.getValueY()][me.getValueX()] = me.getValueWalk();
 		}
 

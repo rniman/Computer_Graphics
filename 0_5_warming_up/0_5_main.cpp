@@ -10,13 +10,15 @@ struct Vertex
 	int index = -1;
 	int len = 0;
 	bool empty = true;
-
+	
 	unsigned cal_lenth() const;
 };
 
 unsigned Vertex::cal_lenth() const
 {
-	return x * x + y * y + z * z;
+	if(!empty)
+		return x * x + y * y + z * z;
+	return 0;
 }
 
 void max_lenth(const array<Vertex, 10>& arr_v, const int& v_num)
@@ -27,9 +29,11 @@ void max_lenth(const array<Vertex, 10>& arr_v, const int& v_num)
 		return;
 	}
 
-	Vertex max_v = { 0,0,0,-1,-1 };
-	for (unsigned i = 0; i < v_num; ++i)
+	Vertex max_v = { 0,0,0,-1,0,1 };
+	for (unsigned i = 0; i < 10; ++i)
 	{
+		if (arr_v[i].empty)
+			continue;
 		if (arr_v[i].len > max_v.len)
 			max_v = arr_v[i];
 	}
@@ -45,9 +49,11 @@ void min_lenth(const array<Vertex, 10>& arr_v, const int& v_num)
 		return;
 	}
 
-	Vertex min_v = { 0,0,0,-1,100000000000000000 };
-	for (unsigned i = 0; i < v_num; ++i)
+	Vertex min_v = { 0,0,0,-1,INT_MAX};
+	for (unsigned i = 0; i < 10; ++i)
 	{
+		if (arr_v[i].empty)
+			continue;
 		if (arr_v[i].len < min_v.len)
 			min_v = arr_v[i];
 	}
@@ -71,7 +77,6 @@ int main()
 	array<Vertex, 10> vertex_list;
 	int vertex_num = 0;
 	bool sort_state = false;
-
 
 	while (1)
 	{
@@ -239,16 +244,20 @@ int main()
 		}
 		else if (command == 'm')
 		{
-			for (unsigned i = 0; i < vertex_num; ++i)
+			for (unsigned i = 0; i < 10; ++i)
 			{
+				if (vertex_list[i].empty)
+					continue;
 				vertex_list[i].len = vertex_list[i].cal_lenth();
 			}
 			max_lenth(vertex_list, vertex_num);
 		}
 		else if (command == 'n')
 		{
-			for (unsigned i = 0; i < vertex_num; ++i)
+			for (unsigned i = 0; i < 10; ++i)
 			{
+				if (vertex_list[i].empty)
+					continue;
 				vertex_list[i].len = vertex_list[i].cal_lenth();
 			}
 			min_lenth(vertex_list, vertex_num);
