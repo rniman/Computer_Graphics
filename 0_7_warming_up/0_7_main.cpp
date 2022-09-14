@@ -132,8 +132,7 @@ void printCard(const Card card[][4],const int& n_x,const int& n_y)
 	{
 		cout << setw(board_width) << i + 1;
 		for (int j = 0; j < 4; ++j)
-		{
-			
+		{	
 
 			if (card[i][j].getUpend())
 			{
