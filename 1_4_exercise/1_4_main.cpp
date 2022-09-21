@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <vector>
 #include <gl/glew.h> //--- 필요한 헤더파일 include
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
@@ -25,8 +26,8 @@ GLboolean timer_on = false;
 class rect
 {
 private:
-	GLfloat left, right;
-	GLfloat top, bottom;
+	GLfloat left = 0, right = 0;
+	GLfloat top = 0, bottom = 0;
 
 	GLfloat red;
 	GLfloat blue;
@@ -55,6 +56,40 @@ public:
 	GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
 	GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
 
+	GLfloat getLeft() const
+	{
+		return left;
+	}
+
+	GLfloat getRight() const
+	{
+		return right;
+	}
+
+	GLfloat getTop() const
+	{
+		return top;
+	}
+
+	GLfloat getBottom() const
+	{
+		return bottom;
+	}
+
+	GLfloat getRed() const
+	{
+		return red;
+	}
+
+	GLfloat getGreen() const
+	{
+		return green;
+	}
+
+	GLfloat getBlue() const
+	{
+		return blue;
+	}
 };
 
 GLvoid rect::convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy)
@@ -69,6 +104,8 @@ GLvoid rect::convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, fl
 	oy = -(float)((y - (float)window_h / 2.0) * (float)(1.0 / (float)(window_h / 2.0)));
 }
 
+std::vector<rect> vec_rect;
+GLint num_rect = 0;
 
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 
 {
@@ -106,7 +143,11 @@ GLvoid drawScene() //--- 콜백 함수: 그리기 콜백 함수
 	glClear(GL_COLOR_BUFFER_BIT); // 설정된 색으로 전체를 칠하기
 
 	// 그리기 부분 구현: 그리기 관련 부분이 여기에 포함된다
-
+	for (auto& e : vec_rect)
+	{
+		glColor3f(e.getRed(), e.getGreen(), e.getBlue());
+		glRectf(e.getLeft(), e.getBottom(), e.getRight(), e.getTop());
+	}
 
 	glutSwapBuffers(); // 화면에 출력하기
 }
@@ -118,22 +159,72 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid KeyEvent(unsigned char key,int x, int y)
 {
+	if (key == 'a')
+	{
 
+	}
+	else if (key == 'i')
+	{
+
+	}
+	else if (key == 'c')
+	{
+
+	}
+	else if (key == 's')
+	{
+		glutTimerFunc(500, TimerEvent, 0);
+	}
+	else if (key == 'm')
+	{
+
+	}
+	else if (key == 'r')
+	{
+		vec_rect.clear();
+		num_rect = 0;
+	}
+	else if (key == 'q')
+	{
+		glutLeaveMainLoop();
+	}
+
+	glutPostRedisplay();
 }
 
 GLvoid MouseEvent(int button, int state, int x, int y)
 {
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		if (num_rect >= 5)
+			return;
 
+		vec_rect.push_back(rect(x, y));
+		num_rect++;
+		glutPostRedisplay();
+	}
 }
 
 GLvoid TimerEvent(int value)
 {
-	if (timer_on)
+	if (value == 1)
 	{
 
 		glutTimerFunc(500, TimerEvent, 1);
 	}
-	else
+	else if (value == 2)
+	{
+
+		glutTimerFunc(500, TimerEvent, 2);
+
+	}
+	else if (value == 3)
+	{
+
+		glutTimerFunc(500, TimerEvent, 3);
+
+	}
+	else if(value == 0)
 	{
 		return;
 	}
