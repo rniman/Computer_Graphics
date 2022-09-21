@@ -82,38 +82,63 @@ GLvoid TimerFunction(int value)
 
 GLvoid KeyEvent(unsigned char key, int x, int y)
 {
+
 	if (key == 'r')			//빨간색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		red = 1.0f;
 		green = 0.0f;
 		blue = 0.0f;
 	}
 	else if (key == 'g')	//초록색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		red = 0.0f;
 		green = 1.0f;
 		blue = 0.0f;
 	}
 	else if (key == 'b')	//파랑색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		red = 0.0f;
 		green = 0.0f;
 		blue = 1.0f;
 	}
 	else if (key == 'w')	//흰색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		red = 1.0f;
 		green = 1.0f;
 		blue = 1.0f;
 	}
 	else if (key == 'k')	//검정색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		red = 0.0f;
 		green = 0.0f;
 		blue = 0.0f;
 	}
 	else if (key == 'a')	//랜덤색
 	{
+		if (timer_on)
+		{
+			KeyEvent('s', 0, 0);
+		}
 		//소수점 3번째 버림
 		std::uniform_int_distribution<int> dis(0, 100);
 		red = static_cast<float>(dis(gen)) * 0.01f;
@@ -125,13 +150,19 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 }
 	else if (key == 't')	//타이머 호출 랜덤
 	{
-		timer_on = timer_on ? false : true;
-		glutTimerFunc(500, TimerFunction, 1);
+		if (!timer_on)
+		{
+			timer_on = timer_on ? false : true;
+			glutTimerFunc(500, TimerFunction, 1);
+		}
 	}
 	else if (key == 's')	//타이머 종료
 	{
-		timer_on = timer_on ? false : true;
-		glutTimerFunc(100, TimerFunction, 1);
+		if (timer_on)
+		{
+			timer_on = timer_on ? false : true;
+			glutTimerFunc(500, TimerFunction, 1);
+		}
 	}
 	else if (key == 'q')		//종료
 	{
