@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <cmath>
 #include <gl/glew.h> //--- 필요한 헤더파일 include
 #include <gl/freeglut.h>
 #include <gl/freeglut_ext.h>
@@ -151,6 +152,17 @@ public:
 		top = ori_top;
 		bottom = ori_bottom;
 	}
+
+	GLfloat getWidth() const 
+	{
+		return right - left;
+	}
+	
+	GLfloat getHeight() const
+	{
+		return top - bottom;
+	}
+
 };
 
 GLvoid rect::convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy)
@@ -321,17 +333,25 @@ GLvoid TimerEvent(int value)
 				e.moveRight(0.02f);
 				e.moveBottom(0.02f);
 				e.moveTop(0.02f);
-				if (e.getRight() >= 1.0f)
+				if (e.getRight() >= 1.0f && e.getTop() >= 1.0f)
 				{
-					e.setLeft(1.0f - float(100) / 400);
+					e.setLeft(1.0f - e.getWidth());
+					e.setRight(1.0f);
+					e.setBottom(1.0f - e.getHeight());
+					e.setTop(1.0f);
+					e.setDirect(2);
+				}
+				else if (e.getRight() >= 1.0f)
+				{
+					e.setLeft(1.0f - e.getWidth());
 					e.setRight(1.0f);
 					e.setDirect(1);
 				}
-				if (e.getTop() >= 1.0f)
+				else if (e.getTop() >= 1.0f)
 				{
+					e.setBottom(1.0f - e.getHeight());
 					e.setTop(1.0f);
-					e.setBottom(1.0f - float(100) / 300);
-					e.setDirect(1);
+					e.setDirect(3);
 				}
 			}
 			//1이면 좌상
@@ -341,16 +361,24 @@ GLvoid TimerEvent(int value)
 				e.moveRight(-0.02f);
 				e.moveBottom(0.02f);
 				e.moveTop(0.02f);
-				if (e.getLeft() <= -1.0f)
+				if (e.getLeft() <= -1.0f && e.getTop() >= 1.0f)
 				{
+					e.setRight(-1.0f + e.getWidth());
 					e.setLeft((-1.0f));
-					e.setRight(-1.0f + float(100) / 400);
-					e.setDirect(2);
+					e.setBottom(1.0f - e.getHeight());
+					e.setTop(1.0f);
+					e.setDirect(3);
+				}
+				else if (e.getLeft() <= -1.0f)
+				{
+					e.setRight(-1.0f + e.getWidth());
+					e.setLeft((-1.0f));
+					e.setDirect(0);
 				}
 				if (e.getTop() >= 1.0f)
 				{
+					e.setBottom(1.0f - e.getHeight());
 					e.setTop(1.0f);
-					e.setBottom(1.0f - float(100) / 300);
 					e.setDirect(2);
 				}
 			}
@@ -361,17 +389,25 @@ GLvoid TimerEvent(int value)
 				e.moveRight(-0.02f);
 				e.moveBottom(-0.02f);
 				e.moveTop(-0.02f);
-				if (e.getLeft() <= -1.0f)
+				if (e.getLeft() <= -1.0f && e.getBottom() <= -1.0f)
 				{
+					e.setRight(-1.0f + e.getWidth());
 					e.setLeft((-1.0f));
-					e.setRight(-1.0f + float(100) / 400);
+					e.setTop(-1.0f + e.getHeight());
+					e.setBottom(-1.0f);
+					e.setDirect(0);
+				}
+				else if (e.getLeft() <= -1.0f)
+				{
+					e.setRight(-1.0f + e.getWidth());
+					e.setLeft((-1.0f));
 					e.setDirect(3);
 				}
 				if (e.getBottom() <= -1.0f)
 				{
-					e.setTop((-1.0f + float(100) / 300));
+					e.setTop(-1.0f + e.getHeight());
 					e.setBottom(-1.0f);
-					e.setDirect(3);
+					e.setDirect(1);
 				}
 			}
 			//3이면 우하
@@ -381,15 +417,23 @@ GLvoid TimerEvent(int value)
 				e.moveRight(0.02f);
 				e.moveBottom(-0.02f);
 				e.moveTop(-0.02f);
+				if (e.getRight() >= 1.0f && e.getBottom() <= -1.0f)
+				{
+					e.setLeft(1.0f - e.getWidth());
+					e.setRight(1.0f);
+					e.setTop(-1.0f + e.getHeight());
+					e.setBottom(-1.0f);
+					e.setDirect(1);
+				}
 				if (e.getRight() >= 1.0f)
 				{
-					e.setLeft((1.0f - float(100) / 400));
+					e.setLeft(1.0f - e.getWidth());
 					e.setRight(1.0f);
-					e.setDirect(0);
+					e.setDirect(2);
 				}
 				if (e.getBottom() <= -1.0f)
 				{
-					e.setTop((-1.0f + float(100) / 300));
+					e.setTop(-1.0f + e.getHeight());
 					e.setBottom(-1.0f);
 					e.setDirect(0);
 				}
@@ -410,15 +454,15 @@ GLvoid TimerEvent(int value)
 				e.moveRight(0.02f);
 				if (e.getRight() >= 1.0f)
 				{
-					e.setLeft((1.0f - float(100) / 400));
+					e.setLeft(1.0f - e.getWidth());
 					e.setRight(1.0f);
 					e.moveBottom(-0.1f);
 					e.moveTop(-0.1f);
 					e.setDirect(1);
 					if (e.getBottom() <= -1.0f)
 					{
+						e.setTop(-1.0f + e.getHeight());
 						e.setBottom(-1.0f);
-						e.setTop(-1.0f + float(100) / 300);
 						e.setDirect(3);
 					}
 				}
@@ -430,15 +474,15 @@ GLvoid TimerEvent(int value)
 				e.moveRight(-0.02f);
 				if (e.getLeft() <= -1.0f)
 				{
+					e.setRight(-1.0f + e.getWidth());
 					e.setLeft(-1.0f);
-					e.setRight(-1.0f + float(100) / 400);
 					e.moveBottom(-0.1f);
 					e.moveTop(-0.1f);
 					e.setDirect(0);
 					if (e.getBottom() <= -1.0f)
 					{
+						e.setTop(-1.0f + e.getHeight());
 						e.setBottom(-1.0f);
-						e.setTop(-1.0f + float(100) / 300);
 						e.setDirect(2);
 					}
 				}
@@ -450,14 +494,14 @@ GLvoid TimerEvent(int value)
 				e.moveRight(0.02f);
 				if (e.getRight() >= 1.0f)
 				{
-					e.setLeft((1.0f - float(100) / 400));
+					e.setLeft(1.0f - e.getWidth());
 					e.setRight(1.0f);
 					e.moveBottom(0.1f);
 					e.moveTop(0.1f);
 					e.setDirect(3);
 					if (e.getTop() >= 1.0f)
 					{
-						e.setBottom(1.0f - float(100) / 300);
+						e.setBottom(1.0f - e.getHeight());
 						e.setTop(1.0f);
 						e.setDirect(1);
 					}
@@ -470,14 +514,14 @@ GLvoid TimerEvent(int value)
 				e.moveRight(-0.02f);
 				if (e.getLeft() <= -1.0f)
 				{
+					e.setRight(-1.0f + e.getWidth());
 					e.setLeft(-1.0f);
-					e.setRight(-1.0f + float(100) / 400);
 					e.moveBottom(0.1f);
 					e.moveTop(0.1f);
 					e.setDirect(2);
 					if (e.getTop() >= 1.0f)
 					{
-						e.setBottom(1.0f - float(100) / 300);
+						e.setBottom(1.0f - e.getHeight());
 						e.setTop(1.0f);
 						e.setDirect(0);
 					}
@@ -493,11 +537,25 @@ GLvoid TimerEvent(int value)
 		{
 			//크기 랜덤하게 바꾸고
 			//그에따른 이동시 방향을 바꿀때를 바꿔줘야함
-			std::uniform_int_distribution<int> dis_width();
-			e.moveLeft(-0.01f);
-			e.moveRight(0.01f);
-			e.moveTop(-0.01f);
-			e.moveBottom(0.02f);
+			std::uniform_int_distribution<int> dis_width(0, 100);
+			std::uniform_int_distribution<int> dis_height(0, 100);
+
+			GLfloat delW = static_cast<float>(dis_width(gen) - 50) * 0.001f;
+			GLfloat delH = static_cast<float>(dis_width(gen) - 50) * 0.001f;
+
+			delW = floor(delW * 100.f + 0.5) / 100.f;
+			delH = floor(delH * 100.f + 0.5) / 100.f;
+
+			if (e.getLeft() - delW < e.getRight())
+			{
+				e.moveLeft(-delW);
+				e.moveRight(delW);
+			}
+			if (e.getBottom() - delH < e.getTop())
+			{
+				e.moveTop(delH);
+				e.moveBottom(-delH);
+			}
 		}
 		glutPostRedisplay();
 		glutTimerFunc(50, TimerEvent, animation_num);
