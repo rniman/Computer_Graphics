@@ -18,7 +18,6 @@ GLboolean timer_on = false;
 std::random_device rd;
 std::mt19937 gen(rd());
 
-
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 
 { 
 	//--- 윈도우 생성하기
@@ -38,6 +37,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	}
 	else
 		std::cout << "GLEW Initialized\n";
+
 
 	glutDisplayFunc(drawScene); // 출력 함수의 지정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
@@ -70,6 +70,7 @@ GLvoid TimerFunction(int value)
 		green = floor(green * 100) / 100;
 		blue = static_cast<float>(dis(gen)) * 0.01f;
 		blue = floor(blue * 100) / 100;
+		
 		glutPostRedisplay();
 		glutTimerFunc(500, TimerFunction, 1);
 	}
@@ -77,12 +78,10 @@ GLvoid TimerFunction(int value)
 	{
 
 	}
-
 }
 
 GLvoid KeyEvent(unsigned char key, int x, int y)
 {
-
 	if (key == 'r')			//빨간색
 	{
 		if (timer_on)
@@ -147,7 +146,7 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		green = floor(green * 100) / 100;
 		blue = static_cast<float>(dis(gen)) * 0.01f;
 		blue = floor(blue * 100) / 100;
-}
+	}
 	else if (key == 't')	//타이머 호출 랜덤
 	{
 		if (!timer_on)
@@ -172,7 +171,7 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		return;
 	}
-	glutDisplayFunc(drawScene);
+
 	//배경색이 바뀔때마다 출력 콜백함수를 호출하여 화면을 refresh
 	glutPostRedisplay();
 }

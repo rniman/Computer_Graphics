@@ -29,11 +29,15 @@ private:
 	GLfloat left = 0, right = 0;
 	GLfloat top = 0, bottom = 0;
 
+	GLfloat ori_left = 0, ori_right = 0;
+	GLfloat ori_top = 0, ori_bottom = 0;
+
 	GLfloat red;
 	GLfloat blue;
 	GLfloat green;
-
+	
 	GLboolean move = false;
+	GLint direct = 0;
 public:
 	rect()
 	{
@@ -51,6 +55,12 @@ public:
 		//기본 크기 100
 		convert_WindowXY_OpenglXY(x - 50, y + 50, left, bottom);
 		convert_WindowXY_OpenglXY(x + 50, y - 50, right, top);
+		ori_left= left;
+		ori_right = right;
+		ori_top = top;
+		ori_bottom = bottom;
+		std::uniform_int_distribution<int> dir_dis(0, 3);
+		this->direct = dir_dis(gen);
 	}
 
 	GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
@@ -90,6 +100,57 @@ public:
 	{
 		return blue;
 	}
+
+	GLint getDirect() const
+	{
+		return direct;
+	}
+
+	GLvoid setLeft(const GLfloat x)
+	{
+		left = x;
+	}
+	GLvoid setRight(const GLfloat x)
+	{
+		right = x;
+	}
+	GLvoid setTop(const GLfloat y)
+	{
+		top = y;
+	}
+	GLvoid setBottom(const GLfloat y)
+	{
+		bottom = y;
+	}
+	GLvoid setDirect(const GLint dir)
+	{
+		direct = dir;
+	}
+
+	GLvoid moveLeft(const GLfloat x)
+	{
+		left += x;
+	}
+	GLvoid moveRight(const GLfloat x)
+	{
+		right += x;
+	}
+	GLvoid moveTop(const GLfloat y)
+	{
+		top += y;
+	}
+	GLvoid moveBottom(const GLfloat y)
+	{
+		bottom += y;
+	}
+
+	GLvoid posReset()
+	{
+		left = ori_left;
+		right = ori_right;
+		top = ori_top;
+		bottom = ori_bottom;
+	}
 };
 
 GLvoid rect::convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy)
@@ -107,6 +168,12 @@ GLvoid rect::convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, fl
 std::vector<rect> vec_rect;
 GLint num_rect = 0;
 
+//0 - s , 1 - a , 2 - i, 3 - c
+GLint animation_num = 0;
+GLboolean timer_a = false;
+GLboolean timer_i = false;
+GLboolean timer_c = false;
+
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 
 {
 	//--- 윈도우 생성하기
@@ -114,7 +181,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); // 디스플레이 모드 설정
 	glutInitWindowPosition(100, 50); // 윈도우의 위치 지정
 	glutInitWindowSize(window_w, window_h); // 윈도우의 크기 지정
-	glutCreateWindow("Example_1_1"); // 윈도우 생성
+	glutCreateWindow("Example_1_4"); // 윈도우 생성
 
 	//--- GLEW 초기화하기
 	glewExperimental = GL_TRUE;
@@ -159,30 +226,65 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid KeyEvent(unsigned char key,int x, int y)
 {
-	if (key == 'a')
+	if (key == 'a')			//대각 이동
 	{
+		timer_a = timer_a ? false : true;
+		timer_i = false;
+		timer_c = false;
 
-	}
-	else if (key == 'i')
-	{
+		if (timer_a)
+			animation_num = 1;
+		else
+			animation_num = 0;
 
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (key == 'c')
+	else if (key == 'i')	//지그재그 이동
 	{
+		timer_a = false;
+		timer_i = timer_i ? false : true;
+		timer_c = false;
 
+		if (timer_i)
+			animation_num = 2;
+		else
+			animation_num = 0;
+		
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (key == 's')
+	else if (key == 'c')	//크기 변환	
 	{
-		glutTimerFunc(500, TimerEvent, 0);
-	}
-	else if (key == 'm')
-	{
+		timer_a = false;
+		timer_i = false;
+		timer_c = timer_c ? false : true;
 
+		if (timer_c)
+			animation_num = 3;
+		else
+			animation_num = 0;
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (key == 'r')
+	else if (key == 's')	//애니메이션 종료
+	{
+		timer_a = false;
+		timer_i = false;
+		timer_c = false;
+		animation_num = 0;
+	}
+	else if (key == 'm')	//위치 이동
+	{
+		for (auto& e : vec_rect)
+		{
+			e.posReset();
+		}
+	}
+	else if (key == 'r')	//리셋
 	{
 		vec_rect.clear();
 		num_rect = 0;
+		timer_a = false;
+		timer_i = false;
+		timer_c = false;
 	}
 	else if (key == 'q')
 	{
@@ -207,25 +309,197 @@ GLvoid MouseEvent(int button, int state, int x, int y)
 
 GLvoid TimerEvent(int value)
 {
-	if (value == 1)
+	//대각 이동 타이머
+	if (value == 1 && timer_a)
 	{
-
-		glutTimerFunc(500, TimerEvent, 1);
+		for (auto& e : vec_rect)
+		{
+			//direct == 0 이면 우상
+			if (e.getDirect() == 0)
+			{
+				e.moveLeft(0.02f);
+				e.moveRight(0.02f);
+				e.moveBottom(0.02f);
+				e.moveTop(0.02f);
+				if (e.getRight() >= 1.0f)
+				{
+					e.setLeft(1.0f - float(100) / 400);
+					e.setRight(1.0f);
+					e.setDirect(1);
+				}
+				if (e.getTop() >= 1.0f)
+				{
+					e.setTop(1.0f);
+					e.setBottom(1.0f - float(100) / 300);
+					e.setDirect(1);
+				}
+			}
+			//1이면 좌상
+			else if (e.getDirect() == 1)
+			{
+				e.moveLeft(-0.02f);
+				e.moveRight(-0.02f);
+				e.moveBottom(0.02f);
+				e.moveTop(0.02f);
+				if (e.getLeft() <= -1.0f)
+				{
+					e.setLeft((-1.0f));
+					e.setRight(-1.0f + float(100) / 400);
+					e.setDirect(2);
+				}
+				if (e.getTop() >= 1.0f)
+				{
+					e.setTop(1.0f);
+					e.setBottom(1.0f - float(100) / 300);
+					e.setDirect(2);
+				}
+			}
+			//2이면 좌하
+			else if (e.getDirect() == 2)
+			{
+				e.moveLeft(-0.02f);
+				e.moveRight(-0.02f);
+				e.moveBottom(-0.02f);
+				e.moveTop(-0.02f);
+				if (e.getLeft() <= -1.0f)
+				{
+					e.setLeft((-1.0f));
+					e.setRight(-1.0f + float(100) / 400);
+					e.setDirect(3);
+				}
+				if (e.getBottom() <= -1.0f)
+				{
+					e.setTop((-1.0f + float(100) / 300));
+					e.setBottom(-1.0f);
+					e.setDirect(3);
+				}
+			}
+			//3이면 우하
+			else if (e.getDirect() == 3)
+			{
+				e.moveLeft(0.02f);
+				e.moveRight(0.02f);
+				e.moveBottom(-0.02f);
+				e.moveTop(-0.02f);
+				if (e.getRight() >= 1.0f)
+				{
+					e.setLeft((1.0f - float(100) / 400));
+					e.setRight(1.0f);
+					e.setDirect(0);
+				}
+				if (e.getBottom() <= -1.0f)
+				{
+					e.setTop((-1.0f + float(100) / 300));
+					e.setBottom(-1.0f);
+					e.setDirect(0);
+				}
+			}
+		}
+		glutPostRedisplay();
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (value == 2)
+	//지그재그 이동 타이머
+	else if (value == 2 && timer_i)
 	{
-
-		glutTimerFunc(500, TimerEvent, 2);
-
+		for (auto& e : vec_rect)
+		{
+			//우로 이동 끝에 닿으면 아래로
+			if (e.getDirect() == 0)
+			{
+				e.moveLeft(0.02f);
+				e.moveRight(0.02f);
+				if (e.getRight() >= 1.0f)
+				{
+					e.setLeft((1.0f - float(100) / 400));
+					e.setRight(1.0f);
+					e.moveBottom(-0.1f);
+					e.moveTop(-0.1f);
+					e.setDirect(1);
+					if (e.getBottom() <= -1.0f)
+					{
+						e.setBottom(-1.0f);
+						e.setTop(-1.0f + float(100) / 300);
+						e.setDirect(3);
+					}
+				}
+			}
+			//좌로 이동 끝에 닿으면 아래로
+			else if(e.getDirect() == 1)
+			{ 
+				e.moveLeft(-0.02f);
+				e.moveRight(-0.02f);
+				if (e.getLeft() <= -1.0f)
+				{
+					e.setLeft(-1.0f);
+					e.setRight(-1.0f + float(100) / 400);
+					e.moveBottom(-0.1f);
+					e.moveTop(-0.1f);
+					e.setDirect(0);
+					if (e.getBottom() <= -1.0f)
+					{
+						e.setBottom(-1.0f);
+						e.setTop(-1.0f + float(100) / 300);
+						e.setDirect(2);
+					}
+				}
+			}
+			//우로 이동 끝에 닿으면 위로
+			else if (e.getDirect() == 2)
+			{
+				e.moveLeft(0.02f);
+				e.moveRight(0.02f);
+				if (e.getRight() >= 1.0f)
+				{
+					e.setLeft((1.0f - float(100) / 400));
+					e.setRight(1.0f);
+					e.moveBottom(0.1f);
+					e.moveTop(0.1f);
+					e.setDirect(3);
+					if (e.getTop() >= 1.0f)
+					{
+						e.setBottom(1.0f - float(100) / 300);
+						e.setTop(1.0f);
+						e.setDirect(1);
+					}
+				}
+			}
+			//좌로 이동 끝에 닿으면 위로
+			else if (e.getDirect() == 3)
+			{
+				e.moveLeft(-0.02f);
+				e.moveRight(-0.02f);
+				if (e.getLeft() <= -1.0f)
+				{
+					e.setLeft(-1.0f);
+					e.setRight(-1.0f + float(100) / 400);
+					e.moveBottom(0.1f);
+					e.moveTop(0.1f);
+					e.setDirect(2);
+					if (e.getTop() >= 1.0f)
+					{
+						e.setBottom(1.0f - float(100) / 300);
+						e.setTop(1.0f);
+						e.setDirect(0);
+					}
+				}
+			}
+		}
+		glutPostRedisplay();
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (value == 3)
+	else if (value == 3 && timer_c)
 	{
-
-		glutTimerFunc(500, TimerEvent, 3);
-
-	}
-	else if(value == 0)
-	{
-		return;
+		for (auto& e : vec_rect)
+		{
+			//크기 랜덤하게 바꾸고
+			//그에따른 이동시 방향을 바꿀때를 바꿔줘야함
+			std::uniform_int_distribution<int> dis_width();
+			e.moveLeft(-0.01f);
+			e.moveRight(0.01f);
+			e.moveTop(-0.01f);
+			e.moveBottom(0.02f);
+		}
+		glutPostRedisplay();
+		glutTimerFunc(50, TimerEvent, animation_num);
 	}
 }
