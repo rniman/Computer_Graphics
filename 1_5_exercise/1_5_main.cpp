@@ -96,6 +96,18 @@ GLvoid MouseClick(int button, int state, int x, int y)
 		if (!left_click)
 		{
 			myRect.setRect(x, y);
+			for (auto& e : rectArr)
+			{
+				if (collisionNum >= objRectNum)
+					break;
+				if (!e.getState())
+					continue;
+				if (collision(myRect, e))
+				{
+					e.setState(false);
+					collisionNum++;
+				}
+			}
 		}
 		left_click = true;
 	}
