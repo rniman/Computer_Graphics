@@ -211,7 +211,7 @@ void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정
 	glutReshapeFunc(Reshape); // 다시 그리기 함수 지정
 	glutKeyboardFunc(KeyEvent);
 	glutMouseFunc(MouseEvent);
-
+	glutTimerFunc(50, TimerEvent, 0);
 
 	glutMainLoop(); // 이벤트 처리 시작
 }
@@ -240,41 +240,39 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 {
 	if (key == 'a')			//대각 이동
 	{
-		timer_a = timer_a ? false : true;
-		timer_i = false;
-		timer_c = false;
+		if (timer_i)
+		{
+			timer_i = false;
+		}
 
-		if (timer_a)
-			animation_num = 1;
+		if (!timer_a)
+		{
+			timer_a = true;
+		}
 		else
-			animation_num = 0;
-
-		glutTimerFunc(50, TimerEvent, animation_num);
+		{
+			timer_a = false;
+		}
 	}
 	else if (key == 'i')	//지그재그 이동
 	{
-		timer_a = false;
-		timer_i = timer_i ? false : true;
-		timer_c = false;
-
-		if (timer_i)
-			animation_num = 2;
+		if (timer_a)
+		{
+			timer_a = false;
+		}
+		if (!timer_i)
+		{
+			timer_i = true;
+		}
 		else
-			animation_num = 0;
-
-		glutTimerFunc(50, TimerEvent, animation_num);
+		{
+			timer_i = false;
+		}
 	}
 	else if (key == 'c')	//크기 변환	
 	{
-		timer_a = false;
-		timer_i = false;
 		timer_c = timer_c ? false : true;
 
-		if (timer_c)
-			animation_num = 3;
-		else
-			animation_num = 0;
-		glutTimerFunc(50, TimerEvent, animation_num);
 	}
 	else if (key == 's')	//애니메이션 종료
 	{
@@ -303,7 +301,6 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		glutLeaveMainLoop();
 	}
 
-	glutPostRedisplay();
 }
 
 GLvoid MouseEvent(int button, int state, int x, int y)
@@ -321,8 +318,37 @@ GLvoid MouseEvent(int button, int state, int x, int y)
 
 GLvoid TimerEvent(int value)
 {
+
+	if (timer_c)
+	{
+		for (auto& e : vec_rect)
+		{
+			//크기 랜덤하게 바꾸고
+			//그에따른 이동시 방향을 바꿀때를 바꿔줘야함
+			std::uniform_int_distribution<int> dis_width(0, 10);
+			std::uniform_int_distribution<int> dis_height(0, 10);
+
+			GLfloat delW = static_cast<float>(dis_width(gen) - 5) * 0.001f;
+			GLfloat delH = static_cast<float>(dis_width(gen) - 5) * 0.001f;
+
+			delW = floor(delW * 100.f + 0.5) / 100.f;
+			delH = floor(delH * 100.f + 0.5) / 100.f;
+
+			if (e.getLeft() - delW < e.getRight())
+			{
+				e.moveLeft(-delW);
+				e.moveRight(delW);
+			}
+			if (e.getBottom() - delH < e.getTop())
+			{
+				e.moveTop(delH);
+				e.moveBottom(-delH);
+			}
+		}
+	}
+
 	//대각 이동 타이머
-	if (value == 1 && timer_a)
+	if (timer_a)
 	{
 		for (auto& e : vec_rect)
 		{
@@ -439,11 +465,9 @@ GLvoid TimerEvent(int value)
 				}
 			}
 		}
-		glutPostRedisplay();
-		glutTimerFunc(50, TimerEvent, animation_num);
 	}
 	//지그재그 이동 타이머
-	else if (value == 2 && timer_i)
+	else if (timer_i)
 	{
 		for (auto& e : vec_rect)
 		{
@@ -528,36 +552,8 @@ GLvoid TimerEvent(int value)
 				}
 			}
 		}
-		glutPostRedisplay();
-		glutTimerFunc(50, TimerEvent, animation_num);
 	}
-	else if (value == 3 && timer_c)
-	{
-		for (auto& e : vec_rect)
-		{
-			//크기 랜덤하게 바꾸고
-			//그에따른 이동시 방향을 바꿀때를 바꿔줘야함
-			std::uniform_int_distribution<int> dis_width(0, 100);
-			std::uniform_int_distribution<int> dis_height(0, 100);
 
-			GLfloat delW = static_cast<float>(dis_width(gen) - 50) * 0.001f;
-			GLfloat delH = static_cast<float>(dis_width(gen) - 50) * 0.001f;
-
-			delW = floor(delW * 100.f + 0.5) / 100.f;
-			delH = floor(delH * 100.f + 0.5) / 100.f;
-
-			if (e.getLeft() - delW < e.getRight())
-			{
-				e.moveLeft(-delW);
-				e.moveRight(delW);
-			}
-			if (e.getBottom() - delH < e.getTop())
-			{
-				e.moveTop(delH);
-				e.moveBottom(-delH);
-			}
-		}
-		glutPostRedisplay();
-		glutTimerFunc(50, TimerEvent, animation_num);
-	}
+	glutPostRedisplay();
+	glutTimerFunc(50, TimerEvent, animation_num);
 }

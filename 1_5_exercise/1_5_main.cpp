@@ -24,6 +24,7 @@ my_Rect myRect;
 obj_Rect rectArr[objRectNum];
 GLint collisionNum = 0;
 
+
 void main(int argc, char** argv) //--- 윈도우 출력하고 콜백함수 설정 
 {
 	//--- 윈도우 생성하기

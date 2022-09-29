@@ -94,9 +94,11 @@ GLvoid Reshape(int w, int h) //--- 콜백 함수: 다시 그리기 콜백 함수
 
 GLvoid KeyEvent(unsigned char key, int x, int y)
 {
+	//numrect = 2
 	if (key == 'a' && num_rect < 5)
 	{
 		std::uniform_int_distribution<int> dis(0, 100);
+
 		rect_array[num_rect].empty = true;
 		rect_array[num_rect].red = (float)dis(gen) / 100;
 		rect_array[num_rect].green = (float)dis(gen) / 100;
