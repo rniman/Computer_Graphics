@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f7e7dbb3-31cb-4747-ab59-9c7d454ea1af}</ProjectGuid>
-    <RootNamespace>My21exercise</RootNamespace>
+    <ProjectGuid>{072cfc35-e34e-492c-bd3d-e15df49f96ff}</ProjectGuid>
+    <RootNamespace>My22exercise</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,14 +127,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="fragment.glsl" />
-    <None Include="vertex.glsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="2_1_main.cpp" />
+    <ClCompile Include="2_2_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="make_Shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fragment.glsl" />
+    <None Include="vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
