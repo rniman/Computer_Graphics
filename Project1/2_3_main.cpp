@@ -13,8 +13,10 @@ void initBuffer();
 
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
 GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
+GLint whatCollisionPoint(const std::vector<GLfloat>& vec, const GLint& index);
 
 const GLint window_w = 600, window_h = 600;
+GLboolean time_o = true, time_i = true;
 
 GLuint vao, vao02;
 GLuint vbo[2], vbo02[2];
@@ -22,9 +24,8 @@ GLuint vbo[2], vbo02[2];
 std::random_device rd;
 std::mt19937 gen(rd());
 
-GLfloat speed[4];
-GLint dir[4];
-//GLint state[4] = { 0,0,0,0 }; //삼각형이 보고있는 방향
+GLfloat speed[6];
+GLint dir[6];
 
 std::vector<GLfloat> rect_vertex =
 {
@@ -52,21 +53,21 @@ std::vector<GLfloat> vertex =
 	0.65, -0.55, 0.0,
 	0.6, -0.4, 0.0,
 
-	-0.55, -0.55, 0.0,
 	-0.65, -0.55, 0.0,
+	-0.55, -0.55, 0.0,
 	-0.6, -0.4, 0.0,
 
-	-0.55, 0.4, 0.0,
 	-0.65, 0.4, 0.0,
+	-0.55, 0.4, 0.0,
 	-0.6, 0.55, 0.0,
 
-	//-0.5, -0.5, 0.0,
-	//-0.3, -0.5, 0.0,
-	//-0.4, -0.2, 0.0,
+	-0.5, -0.5, 0.0,
+	-0.3, -0.5, 0.0,
+	-0.4, -0.2, 0.0,
 
-	//0.5, 0.5, 0.0,
-	//0.3, 0.5, 0.0,
-	//0.4, 0.2, 0.0,
+	0.3, 0.5, 0.0,
+	0.5, 0.5, 0.0,
+	0.4, 0.2, 0.0,
 };
 
 std::vector<GLfloat> color =
@@ -87,16 +88,14 @@ std::vector<GLfloat> color =
 	1.0, 1.0, 0.0,
 	1.0, 1.0, 0.0,
 
-	//1.0, 0.0, 1.0,
-	//1.0, 0.0, 1.0,
-	//1.0, 0.0, 1.0,
+	1.0, 0.0, 1.0,
+	1.0, 0.0, 1.0,
+	1.0, 0.0, 1.0,
 
-	//1.0, 0.0, 1.0,
-	//1.0, 0.0, 1.0,
-	//1.0, 0.0, 1.0
+	1.0, 0.0, 1.0,
+	1.0, 0.0, 1.0,
+	1.0, 0.0, 1.0
 };
-
-GLint delete_now = 0;
 
 int main(int argc, char** argv)
 {
@@ -105,7 +104,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_2_2(7번)");
+	glutCreateWindow("Example_2_3(8번)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -115,10 +114,14 @@ int main(int argc, char** argv)
 	std::uniform_int_distribution<int> dis(3, 8);
 	for (auto& e : speed)
 		e = static_cast<GLfloat>(dis(gen)) * 0.01f;
+	speed[4] = 0.04f;
+	speed[5] = 0.04f;
 
 	std::uniform_int_distribution<int> dis_dir(0, 3);
 	for (auto& e : dir)
 		e = dis_dir(gen);
+	dir[4] = 0;
+	dir[5] = 3;
 
 	shaderID = make_shaderProgram();	//세이더 프로그램 만들기
 	initBuffer();
@@ -144,9 +147,9 @@ GLvoid drawScene()
 	glUseProgram(shaderID);
 
 	//사각형 그림
-	//glBindVertexArray(vao02);
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo02[0]);
-	//glDrawArrays(GL_LINE_LOOP, 0, 4);
+	glBindVertexArray(vao02);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo02[0]);
+	glDrawArrays(GL_LINE_LOOP, 0, 4);
 
 	//삼각형 그림
 	glBindVertexArray(vao);
@@ -164,11 +167,11 @@ GLvoid KeyDown(unsigned char key, int x, int y)
 {
 	if (key == 'o')
 	{
-		glutPostRedisplay();
+		time_o = time_o ? false : true;
 	}
 	else if (key == 'i')
 	{
-		return;
+		time_i = time_i ? false : true;
 	}
 	else if (key == 'q')
 	{
@@ -182,6 +185,8 @@ GLvoid TimeEvent(int value)
 	//이동
 	for (int i = 0; i < 4; ++i)
 	{
+		if (!time_o)
+			break;
 		//우상
 		if (dir[i] == 0)
 		{
@@ -216,6 +221,83 @@ GLvoid TimeEvent(int value)
 			{
 				vertex[9 * i + j * 3] += speed[i];
 				vertex[9 * i + j * 3 + 1] -= speed[i];
+			}
+		}
+
+		GLint col_point = whatCollisionPoint(vertex, i);
+		if (col_point != -1)
+		{
+			if (dir[i] == 0 && vertex[i * 9 + col_point * 3] - speed[i] < -0.5f)
+			{
+				dir[i] = 1;
+				vertex[i * 9] = -0.5f;
+				vertex[i * 9 + 1] = vertex[i * 9 + 7] - 0.05f;
+				vertex[i * 9 + 3] = -0.5f;
+				vertex[i * 9 + 4] = vertex[i * 9 + 7] + 0.05f;
+				vertex[i * 9 + 6] = -0.65f;
+			}
+			else if (dir[i] == 0 && vertex[i * 9 + col_point * 3 + 1] - speed[i] <= -0.5f)
+			{
+				dir[i] = 3;
+				vertex[i * 9] = vertex[i * 9 + 6] + 0.05f;
+				vertex[i * 9 + 1] = -0.5f;
+				vertex[i * 9 + 3] = vertex[i * 9 + 6] - 0.05f;
+				vertex[i * 9 + 4] = -0.5f;
+				vertex[i * 9 + 7] = -0.65f;
+			}
+			else if (dir[i] == 1 && vertex[i * 9 + col_point * 3] + speed[i] > 0.5f)
+			{
+				dir[i] = 0;
+				vertex[i * 9] = 0.5f;
+				vertex[i * 9 + 1] = vertex[i * 9 + 7] + 0.05f;
+				vertex[i * 9 + 3] = 0.5f;
+				vertex[i * 9 + 4] = vertex[i * 9 + 7] - 0.05f;
+				vertex[i * 9 + 6] = 0.65f;
+			}
+			else if (dir[i] == 1 && vertex[i * 9 + col_point * 3 + 1] - speed[i] <= -0.5f)
+			{
+				dir[i] = 2;
+				vertex[i * 9] = vertex[i * 9 + 6] + 0.05f;
+				vertex[i * 9 + 1] = -0.5f;
+				vertex[i * 9 + 3] = vertex[i * 9 + 6] - 0.05f;
+				vertex[i * 9 + 4] = -0.5f;
+				vertex[i * 9 + 7] = -0.65f;
+			}
+			else if (dir[i] == 2 && vertex[i * 9 + col_point * 3] + speed[i] > 0.5f)
+			{
+				dir[i] = 3;
+				vertex[i * 9] = 0.5f;
+				vertex[i * 9 + 1] = vertex[i * 9 + 7] + 0.05f;
+				vertex[i * 9 + 3] = 0.5f;
+				vertex[i * 9 + 4] = vertex[i * 9 + 7] - 0.05f;
+				vertex[i * 9 + 6] = 0.65f;
+			}
+			else if (dir[i] == 2 && vertex[i * 9 + col_point * 3 + 1] + speed[i] >= 0.5f)
+			{
+				dir[i] = 1;
+				vertex[i * 9] = vertex[i * 9 + 6] - 0.05f;
+				vertex[i * 9 + 1] = 0.5f;
+				vertex[i * 9 + 3] = vertex[i * 9 + 6] + 0.05f;
+				vertex[i * 9 + 4] = 0.5f;
+				vertex[i * 9 + 7] = 0.65f;
+			}
+			else if (dir[i] == 3 && vertex[i * 9 + col_point * 3] - speed[i] < -0.5f)
+			{
+				dir[i] = 2;
+				vertex[i * 9] = -0.5f;
+				vertex[i * 9 + 1] = vertex[i * 9 + 7] - 0.05f;
+				vertex[i * 9 + 3] = -0.5f;
+				vertex[i * 9 + 4] = vertex[i * 9 + 7] + 0.05f;
+				vertex[i * 9 + 6] = -0.65f;
+			}
+			else if (dir[i] == 3 && vertex[i * 9 + col_point * 3 + 1] + speed[i] >= 0.5f)
+			{
+				dir[i] = 0;
+				vertex[i * 9] = vertex[i * 9 + 6] - 0.05f;
+				vertex[i * 9 + 1] = 0.5f;
+				vertex[i * 9 + 3] = vertex[i * 9 + 6] + 0.05f;
+				vertex[i * 9 + 4] = 0.5f;
+				vertex[i * 9 + 7] = 0.65f;
 			}
 		}
 
@@ -296,6 +378,164 @@ GLvoid TimeEvent(int value)
 			vertex[9 * i + 7] = -0.85f;
 		}
 	}
+
+	std::uniform_int_distribution<int> dis(0, 10);
+	GLfloat red = static_cast<GLfloat>(dis(gen)) * 0.1f;
+	GLfloat green = static_cast<GLfloat>(dis(gen)) * 0.1f;
+	GLfloat blue = static_cast<GLfloat>(dis(gen)) * 0.1f;
+	for (int i = 4; i < 6; ++i)
+	{
+		if (!time_i)
+			break;
+		if (dir[i] == 0)
+		{
+			for(int j=0 ;j<3 ;++j)
+				vertex[9 * i + j * 3] += speed[i];
+			if (vertex[9 * i + 3] >= 0.5f)
+			{
+				dir[i] = 1;
+				vertex[9 * i] = 0.3f;
+				vertex[9 * i + 3] = 0.5f;
+				vertex[9 * i + 6] = 0.4f;
+				
+				vertex[9 * i + 1] += speed[i];
+				vertex[9 * i + 4] += speed[i];
+				vertex[9 * i + 7] += speed[i];
+
+				//std::uniform_int_distribution<int> dis(0, 10);
+				//GLfloat red = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat green = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat blue = static_cast<GLfloat>(dis(gen)) * 0.1f;
+
+				for (int j = 0; j < 3; ++j)
+				{
+					color[9 * i + j * 3] = red;
+					color[9 * i + j * 3 + 1] = green;
+					color[9 * i + j * 3 + 2] = blue;
+				}
+				
+				if (vertex[9 * i + 7] >= 0.5f)
+				{
+					dir[i] = 3;
+					vertex[9 * i + 1] = 0.5f;
+					vertex[9 * i + 4] = 0.5f;
+					vertex[9 * i + 7] = 0.2f;
+				}
+			}
+		}
+		else if (dir[i] == 1)
+		{
+			for (int j = 0; j < 3; ++j)
+				vertex[9 * i + j * 3] -= speed[i];
+			if (vertex[9 * i] <= -0.5f)
+			{
+				dir[i] = 0;
+				vertex[9 * i] = -0.5f;
+				vertex[9 * i + 3] = -0.3f;
+				vertex[9 * i + 6] = -0.4f;
+
+				vertex[9 * i + 1] += speed[i];
+				vertex[9 * i + 4] += speed[i];
+				vertex[9 * i + 7] += speed[i];
+
+				//std::uniform_int_distribution<int> dis(0, 10);
+				//GLfloat red = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat green = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat blue = static_cast<GLfloat>(dis(gen)) * 0.1f;
+
+				for (int j = 0; j < 3; ++j)
+				{
+					color[9 * i + j * 3] = red;
+					color[9 * i + j * 3 + 1] = green;
+					color[9 * i + j * 3 + 2] = blue;
+				}
+
+				if (vertex[9 * i + 7] >= 0.5f)
+				{
+					dir[i] = 2;
+					vertex[9 * i + 1] = 0.5f;
+					vertex[9 * i + 4] = 0.5f;
+					vertex[9 * i + 7] = 0.2f;
+				}
+			}
+		}
+		else if (dir[i] == 2)
+		{
+			for (int j = 0; j < 3; ++j)
+				vertex[9 * i + j * 3] += speed[i];
+			if (vertex[9 * i + 3] >= 0.5f)
+			{
+				dir[i] = 3;
+				vertex[9 * i] = 0.3f;
+				vertex[9 * i + 3] = 0.5f;
+				vertex[9 * i + 6] = 0.4f;
+
+				vertex[9 * i + 1] -= speed[i];
+				vertex[9 * i + 4] -= speed[i];
+				vertex[9 * i + 7] -= speed[i];
+
+				//std::uniform_int_distribution<int> dis(0, 10);
+				//GLfloat red = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat green = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat blue = static_cast<GLfloat>(dis(gen)) * 0.1f;
+
+				for (int j = 0; j < 3; ++j)
+				{
+					color[9 * i + j * 3] = red;
+					color[9 * i + j * 3 + 1] = green;
+					color[9 * i + j * 3 + 2] = blue;
+				}
+
+				if (vertex[9 * i + 7] <= -0.5f)
+				{
+					dir[i] = 1;
+					vertex[9 * i + 1] = -0.5f;
+					vertex[9 * i + 4] = -0.5f;
+					vertex[9 * i + 7] = -0.2f;
+				}
+			}
+		}
+		else if (dir[i] == 3)
+		{
+			for (int j = 0; j < 3; ++j)
+				vertex[9 * i + j * 3] -= speed[i];
+			if (vertex[9 * i] <= -0.5f)
+			{
+				dir[i] = 2;
+				vertex[9 * i] = -0.5f;
+				vertex[9 * i + 3] = -0.3f;
+				vertex[9 * i + 6] = -0.4f;
+
+				vertex[9 * i + 1] -= speed[i];
+				vertex[9 * i + 4] -= speed[i];
+				vertex[9 * i + 7] -= speed[i];
+
+				//std::uniform_int_distribution<int> dis(0, 10);
+				//GLfloat red = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat green = static_cast<GLfloat>(dis(gen)) * 0.1f;
+				//GLfloat blue = static_cast<GLfloat>(dis(gen)) * 0.1f;
+
+				for (int j = 0; j < 3; ++j)
+				{
+					color[9 * i + j * 3] = red;
+					color[9 * i + j * 3 + 1] = green;
+					color[9 * i + j * 3 + 2] = blue;
+				}
+
+				if (vertex[9 * i + 7] <= -0.5f)
+				{
+					dir[i] = 0;
+					vertex[9 * i + 1] = -0.5f;
+					vertex[9 * i + 4] = -0.5f;
+					vertex[9 * i + 7] = -0.2f;
+				}
+			}
+		}
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, color.size() * sizeof(GLfloat), color.data(), GL_STREAM_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
 	glutPostRedisplay();
@@ -345,4 +585,22 @@ GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& o
 {
 	ox = (float)((x - (float)window_w / 2.0) * (float)(1.0 / (float)(window_w / 2.0)));
 	oy = -(float)((y - (float)window_h / 2.0) * (float)(1.0 / (float)(window_h / 2.0)));
+}
+
+GLint whatCollisionPoint(const std::vector<GLfloat>& vec, const GLint& index)
+{
+	if (vec[index * 9] > -0.5f && vec[index * 9 + 1] > -0.5f && vec[index * 9] < 0.5f && vec[index * 9 + 1] < 0.5f)
+	{
+		return 0;
+	}
+	else if (vec[index * 9 + 3] > -0.5f && vec[index * 9 + 4] > -0.5f && vec[index * 9 + 3] < 0.5f && vec[index * 9 + 4] < 0.5f)
+	{
+		return 1;
+	}
+	else if (vec[index * 9 + 6] > -0.5f && vec[index * 9 + 7] > -0.5f && vec[index * 9 + 6] < 0.5f && vec[index * 9 + 7] < 0.5f)
+	{
+		return 1;
+	}
+	else
+		return -1;
 }

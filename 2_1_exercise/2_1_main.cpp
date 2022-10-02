@@ -179,6 +179,10 @@ GLvoid KeyDown(unsigned char key, int x, int y)
 		key_a = key_a ? false : true;
 		glutPostRedisplay();
 	}
+	else if (key == 'q')
+	{
+		glutExit();
+	}
 }
 
 void initBuffer()

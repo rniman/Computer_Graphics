@@ -10,6 +10,7 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 GLvoid TimeEvent(int value);
 GLvoid MouseClick(int button, int state, int x, int y);
+GLvoid KeyEvent(unsigned char key, int x, int y);
 void initBuffer();
 
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
@@ -57,9 +58,9 @@ int main(int argc, char** argv)
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
-	
 	glutMouseFunc(MouseClick);
 	glutTimerFunc(100, TimeEvent, 1);
+	glutKeyboardFunc(KeyEvent);
 
 	glutMainLoop();
 }
@@ -171,6 +172,11 @@ GLvoid TimeEvent(int value)
 	glutTimerFunc(100, TimeEvent, 1);
 }
 
+GLvoid KeyEvent(unsigned char key, int x, int y)
+{
+	if (key == 'q')
+		glutExit();
+}
 
 void initBuffer()
 {
