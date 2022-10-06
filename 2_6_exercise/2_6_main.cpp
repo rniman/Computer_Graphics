@@ -131,7 +131,19 @@ GLvoid MouseMotion(int x, int y)
 {
 	if (left_click == 0) //사각형 클릭
 	{
+		GLfloat temp_ox, temp_oy;
+		GLfloat old_ox, old_oy;
+		convert_WindowXY_OpenglXY(x, y, temp_ox, temp_oy);
+		convert_WindowXY_OpenglXY(oldx, oldy, old_ox, old_oy);
 
+		for (int i = 0; i < 4; ++i)
+		{
+			vertex[3 * i] += temp_ox - old_ox;
+			vertex[3 * i + 1] += temp_oy - old_oy;
+		}
+		oldx = x;
+		oldy = y;
+		glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
 	}
 	else if (left_click > 0) //왼쪽 위점 클릭
 	{
