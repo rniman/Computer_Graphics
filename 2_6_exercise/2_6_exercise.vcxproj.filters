@@ -15,9 +15,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="2_3_main.cpp">
+    <ClCompile Include="2_6_main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="make_Shader.h">
+      <Filter>리소스 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment.glsl">
@@ -26,10 +31,5 @@
     <None Include="vertex.glsl">
       <Filter>소스 파일</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="make_Shader.h">
-      <Filter>리소스 파일</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

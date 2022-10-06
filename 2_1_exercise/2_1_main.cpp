@@ -17,11 +17,12 @@ const GLint window_w = 600, window_h = 600;
 GLboolean key_a = false;
 GLboolean sizeup_state = true;
 GLfloat sizeup = 0.01f;
+GLint delete_now = 0;
 
 GLuint vao;
 GLuint vbo[2];
 
-std::vector<std::vector<float>> a;
+
 
 std::vector<GLfloat> vertex =
 {
@@ -63,7 +64,6 @@ std::vector<GLfloat> color =
 	1.0, 0.0, 1.0
 };
 
-GLint delete_now = 0;
 
 int main(int argc, char** argv)
 {
@@ -90,8 +90,6 @@ int main(int argc, char** argv)
 	glutMainLoop();
 }
 
-
-
 GLvoid drawScene()
 {
 	GLfloat rColor, gColor, bColor;
@@ -116,7 +114,8 @@ GLvoid drawScene()
 		glDrawArrays(GL_LINE_LOOP, 9, 3);
 	}
 	else
-		glDrawArrays(GL_TRIANGLES, 0, vertex.size());
+		glDrawArrays(GL_TRIANGLES, 0, vertex.size() / 3);
+
 
 	glutSwapBuffers();
 }
@@ -131,10 +130,15 @@ GLvoid mouseEvent(int button, int state, int x, int y)
 	{
 		GLfloat temp_x, temp_y;
 		convert_WindowXY_OpenglXY(x, y, temp_x, temp_y);
+
+		//dn = 0
 		vertex[delete_now++] = temp_x - 0.1f - sizeup;
+		//dn = 1
 		vertex[delete_now++] = temp_y - 0.15f - sizeup;
+		//dn = 2
 		vertex[delete_now++] = 1.0;
 
+		//dn = 3
 		vertex[delete_now++] = temp_x + 0.1f + sizeup;
 		vertex[delete_now++] = temp_y - 0.15f - sizeup;
 		vertex[delete_now++] = 1.0;
@@ -143,7 +147,7 @@ GLvoid mouseEvent(int button, int state, int x, int y)
 		vertex[delete_now++] = temp_y + 0.15f + sizeup;
 		vertex[delete_now++] = 1.0;
 
-		if (sizeup_state)
+		if (sizeup_state == true)
 		{
 			sizeup += 0.01f;
 			if (sizeup > 0.1f)
@@ -155,7 +159,6 @@ GLvoid mouseEvent(int button, int state, int x, int y)
 			if (sizeup < -0.1f)
 				sizeup_state = true;
 		}
-
 
 		if (delete_now >= vertex.size())
 			delete_now = 0;

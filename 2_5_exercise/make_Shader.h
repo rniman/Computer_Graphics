@@ -8,6 +8,7 @@ GLuint shaderID;		//세이더 프로그램 이름
 GLuint vertexShader;	//버텍스 세이더 객체
 GLuint fragmentShader;	//프래그먼트 세이더 객체
 
+
 char* filetobuf(const char* file)
 {
 	FILE* fptr;

@@ -21,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9e571af2-682d-4949-b485-4873896d40eb}</ProjectGuid>
+    <ProjectGuid>{5bc7cee3-1b13-4a25-8807-d89d10509f00}</ProjectGuid>
     <RootNamespace>My23exercise</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>2_4_exercise</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -128,7 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="2_4_main.cpp" />
+    <ClCompile Include="2_3_main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment.glsl" />

@@ -8,8 +8,9 @@
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
-GLvoid TimeEvent(int value);
 GLvoid MouseClick(int button, int state, int x, int y);
+GLvoid MouseMotion(int x, int y);
+
 GLvoid KeyEvent(unsigned char key, int x, int y);
 void initBuffer();
 
@@ -17,27 +18,38 @@ GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& o
 GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
 
 
-const GLint window_w = 600, window_h = 600;
+const GLint window_w = 800, window_h = 600;
 GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
+GLint oldx, oldy;
+GLint left_click = -1;
 
-GLboolean left_click = false;
-GLfloat ox, oy;
-GLint angle = 0;
-GLfloat radius = 0;
-GLboolean rotate = true;
-
-GLuint vao, vao02;
-GLuint vbo[2], vbo02[2];
+GLuint vao;
+GLuint vbo[2];
 
 std::random_device rd;
 std::mt19937 gen(rd());
 
 std::vector<GLfloat> vertex =
 {
+	-0.5f, 0.5f, 0.0f,
+	-0.5f, -0.5f, 0.0f,
+	0.5f,-0.5f, 0.0f,
+	0.5f, 0.5f, 0.0f
+
+	/*-0.5f, 0.5f, 0.0f,
+	0.5f, -0.5f, 0.0f,
+	0.5f, 0.5f, 0.0f*/
 };
+
 
 std::vector<GLfloat> color =
 {
+	0.0f,1.0f,0.0f,
+	0.0f,1.0f,0.0f,
+	0.0f,1.0f,0.0f,
+	0.0f,1.0f,0.0f,
+	//0.0f,1.0f,0.0f,
+	//0.0f,1.0f,0.0f
 };
 
 int main(int argc, char** argv)
@@ -46,7 +58,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_2_4(9번)");
+	glutCreateWindow("Example_2_5(10번)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -58,8 +70,6 @@ int main(int argc, char** argv)
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
-	glutMouseFunc(MouseClick);
-	glutTimerFunc(100, TimeEvent, 1);
 	glutKeyboardFunc(KeyEvent);
 
 	glutMainLoop();
@@ -76,11 +86,14 @@ GLvoid drawScene()
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	
-	glPointSize(3.0f);
+	glDrawArrays(GL_LINE_LOOP, 0, vertex.size() / 3);
+
+	glPointSize(5);
 	glDrawArrays(GL_POINTS, 0, vertex.size() / 3);
 
 	glutSwapBuffers();
 }
+
 GLvoid Reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
@@ -88,88 +101,27 @@ GLvoid Reshape(int w, int h)
 
 GLvoid MouseClick(int button, int state, int x, int y)
 {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	if (button == GLUT_LEFT && state == GLUT_DOWN)
 	{
-		if (!left_click)
-		{
-			vertex.clear();
-			color.clear();
-			angle = 0;
-			radius = 0;
-			rotate = true;
+		//점이 어디를 눌렀는지
 
-			std::uniform_int_distribution<int> dis(0, 5);
-			rColor = static_cast<GLfloat>(dis(gen)) * 0.1f;
-			gColor = static_cast<GLfloat>(dis(gen)) * 0.1f;
-			bColor = static_cast<GLfloat>(dis(gen)) * 0.1f;
+	}
+	else if (button == GLUT_LEFT && state == GLUT_UP)
+	{
 
-			convert_WindowXY_OpenglXY(x, y, ox, oy);
-
-			left_click = true;
-			vertex.push_back(ox);
-			vertex.push_back(oy);
-			vertex.push_back(0.0f);
-
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-
-			glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-			glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_DYNAMIC_DRAW);
-			glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-			glBufferData(GL_ARRAY_BUFFER, color.size() * sizeof(GLfloat), color.data(), GL_DYNAMIC_DRAW);
-		}
 	}
 }
 
-GLvoid TimeEvent(int value)
+GLvoid MouseMotion(int x, int y)
 {
-	if (left_click)
+	if (left_click == 0) //사각형 클릭
 	{
-		if (rotate)
-		{
-			angle += 10;
-			radius += 0.001;
-			vertex.push_back(radius * (cos(M_PI * angle / 180)) + ox);
-			vertex.push_back(radius * (sin(M_PI * angle / 180)) + oy);
-			vertex.push_back(0.0f);
 
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-
-			if (angle == 360 * 3)
-			{
-				ox += radius * 2;
-				angle += 180;
-				rotate = false;
-			}
-		}
-		else
-		{
-			angle -= 10;
-			radius -= 0.001;
-			vertex.push_back(radius * (cos(M_PI * angle / 180)) + ox);
-			vertex.push_back(radius * (sin(M_PI * angle / 180)) + oy);
-			vertex.push_back(0.0f);
-
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-			color.push_back(1.0f);
-
-			if (angle == 180)
-			{
-				left_click = false;
-			}
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-		glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-		glBufferData(GL_ARRAY_BUFFER, color.size() * sizeof(GLfloat), color.data(), GL_STATIC_DRAW);
 	}
+	else if (left_click == 1) //왼쪽 위점 클릭
+	{
 
-	glutPostRedisplay();
-	glutTimerFunc(100, TimeEvent, 1);
+	}
 }
 
 GLvoid KeyEvent(unsigned char key, int x, int y)
