@@ -76,6 +76,8 @@ int main(int argc, char** argv)
 	glutMotionFunc(MouseMotion);
 	glutKeyboardFunc(KeyEvent);
 
+
+
 	glutMainLoop();
 }
 
@@ -88,7 +90,6 @@ GLvoid drawScene()
 	glUseProgram(shaderID);
 
 	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
 	glDrawArrays(GL_LINE_LOOP, 0, vertex.size() / 3);
 

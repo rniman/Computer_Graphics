@@ -23,7 +23,7 @@ GLuint time_on = 0;
 GLboolean timer = false;
 
 GLuint vao;
-GLuint vbo[2];
+GLuint vbo[2], ebo;
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -33,45 +33,53 @@ std::vector<GLfloat> vertex =
 	//2사분면
 	-0.7f, 0.3f, 0.0f,
 	-0.3f, 0.3f, 0.0f,
-	-0.5f, 0.3f, 0.0f,//옮길 점
-
-
+	-0.5f, 0.3f, 0.0f,//옮길 점				2
+	
 	//1사분면 -start 9
 	0.3f, 0.3f, 0.0f,
 	0.7f,0.3f,0.0f,
-	0.5f,0.7f,0.0f, //겹쳐져있는 옮길점
+	0.5f,0.7f,0.0f, //겹쳐져있는 오른쪽으로 옮길점
 
-	0.3f, 0.3f, 0.0f,
-	0.5f,0.7f,0.0f,	//겹쳐져있는 옮길점
-	0.5f,0.7f,0.0f, //-> 옮길 점
+	0.5f,0.7f,0.0f, //-> 왼쪽으로 옮길 점		6
 
-	//3사분면 -start 27
+	//3사분면 -start 21
 	-0.6f, -0.4f, 0.0f, //옮길점
 	-0.6f, -0.6f, 0.0f, 
 	-0.4f, -0.6f, 0.0f, 
 
-	-0.4f, -0.6f, 0.0f, 
 	-0.4f, -0.4f, 0.0f,	//옮길점
-	-0.6f, -0.4f, 0.0f,	//옮길점
 
-	-0.6f, -0.4f, 0.0f,
-	-0.4f, -0.4f, 0.0f,
-	-0.5f, -0.4f, 0.0f, //위로 옮길점
+	-0.5f, -0.4f, 0.0f, //위로 옮길점		11
 
-	//4사분면 -start 54
+	//4사분면 -start 36
 	0.5f, -0.4f, 0.0f,
 	0.3f, -0.5f, 0.0f,
 	0.4f, -0.6f, 0.0f,
 
-	0.5f, -0.4f, 0.0f,
-	0.4f, -0.6f, 0.0f,
 	0.6f, -0.6f, 0.0f,
 
-	0.5f, -0.4f, 0.0f,
-	0.6f, -0.6f, 0.0f,
-	0.7f, -0.5f, 0.0f
+	0.7f, -0.5f, 0.0f	//					16
 };
 
+std::vector<GLuint> index =
+{
+	//점 -> 삼각형
+	0, 1, 2,
+
+	//삼각형 -> 사각형
+	3, 5, 4,
+	3, 5, 6,
+
+	//사각형 -> 오각형
+	7, 8, 9,
+	9, 10, 7,
+	7, 10, 11,
+
+	//오각형 -> 점
+	12, 13, 14,
+	12, 14, 15,
+	12, 15, 16
+};
 
 std::vector<GLfloat> color =
 {
@@ -83,29 +91,19 @@ std::vector<GLfloat> color =
 	1.0f, 1.0f, 0.0f,
 	1.0f, 1.0f, 0.0f,
 	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 0.0f,
 
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 1.0f,
+	
 
 	0.0f, 1.0f, 1.0f,
 	0.0f, 1.0f, 1.0f,
 	0.0f, 1.0f, 1.0f,
 	0.0f, 1.0f, 1.0f,
 	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f,
-	0.0f, 1.0f, 1.0f
-
 };
 
 int main(int argc, char** argv)
@@ -141,21 +139,27 @@ GLvoid drawScene()
 	glUseProgram(shaderID);
 
 	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	
 	if (!timer && time_on == 0)
 	{
-		glDrawArrays(GL_LINE_STRIP, 0, 2);
-		glDrawArrays(GL_TRIANGLES, 3, vertex.size() / 3);
+		glDrawElements(GL_LINE_STRIP, 3, GL_UNSIGNED_INT, 0); //
+		glDrawElements(GL_TRIANGLES, index.size(), GL_UNSIGNED_INT, 0);
 	}
 	else if (time_on == 100)
 	{
-		glDrawArrays(GL_TRIANGLES, 0, 18);
+		glDrawElements(GL_TRIANGLES, index.size(), GL_UNSIGNED_INT, 0);
+		
+		//
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(GLuint), index.data() + 18, GL_STATIC_DRAW);
 		glPointSize(5);
-		glDrawArrays(GL_POINTS, 19, 1);
+		glDrawElements(GL_POINTS, 1, GL_UNSIGNED_INT, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
 	}
 	else
-		glDrawArrays(GL_TRIANGLES, 0, vertex.size() / 3);
+		glDrawElements(GL_TRIANGLES, index.size(), GL_UNSIGNED_INT, 0);
 
 	glutSwapBuffers();
 }
@@ -169,68 +173,43 @@ GLvoid TimeEvent(int value)
 	if (time_on > 0 && time_on < 100 && timer)
 	{
 		vertex[7] += 0.003f;
-		
+
 		vertex[15] += 0.003f;
-		vertex[21] += 0.003f;
-		vertex[24] -= 0.003f;
+		vertex[18] -= 0.003f;
 
-		vertex[27] -= 0.001f;
-		vertex[42] -= 0.001f;
-		vertex[39] += 0.001f;
+		vertex[21] -= 0.001f;
+		vertex[30] += 0.001f;
+		vertex[34] += 0.002f;
 
+		vertex[37] -= 0.001f;
+		vertex[39] += 0.002f;
+		vertex[42] += 0.001f;
+		vertex[43] += 0.001f;
 		vertex[45] -= 0.001f;
-		vertex[48] += 0.001f;
-		vertex[52] += 0.002f;
-
-		vertex[55] -= 0.001f;
-		vertex[57] += 0.002f;
-		vertex[60] += 0.001f;
-		vertex[61] += 0.001f;
-
-		vertex[64] -= 0.001f;
-		vertex[66] += 0.001f;
-		vertex[67] += 0.001f;
-		vertex[69] -= 0.001f;
-		vertex[70] += 0.001f;
-
-		vertex[73] -= 0.001f;
-		vertex[75] -= 0.001f;
-		vertex[76] += 0.001f;
-		vertex[78] -= 0.002f;
-
+		vertex[46] += 0.001f;
+		vertex[48] -= 0.002f;
 
 	}
+	else if (time_on == 100)
+		return;
 	else if (time_on > 100 && time_on < 200 && timer)
 	{
 		vertex[7] -= 0.003f;
 
 		vertex[15] -= 0.003f;
-		vertex[21] -= 0.003f;
-		vertex[24] += 0.003f;
+		vertex[18] += 0.003f;
 
-		vertex[27] += 0.001f;
-		vertex[42] += 0.001f;
-		vertex[39] -= 0.001f;
+		vertex[21] += 0.001f;
+		vertex[30] -= 0.001f;
+		vertex[34] -= 0.002f;
 
+		vertex[37] += 0.001f;
+		vertex[39] -= 0.002f;
+		vertex[42] -= 0.001f;
+		vertex[43] -= 0.001f;
 		vertex[45] += 0.001f;
-		vertex[48] -= 0.001f;
-		vertex[52] -= 0.002f;
-
-		vertex[55] += 0.001f;
-		vertex[57] -= 0.002f;
-		vertex[60] -= 0.001f;
-		vertex[61] -= 0.001f;
-
-		vertex[64] += 0.001f;
-		vertex[66] -= 0.001f;
-		vertex[67] -= 0.001f;
-		vertex[69] += 0.001f;
-		vertex[70] -= 0.001f;
-
-		vertex[73] += 0.001f;
-		vertex[75] += 0.001f;
-		vertex[76] -= 0.001f;
-		vertex[78] += 0.002f;
+		vertex[46] -= 0.001f;
+		vertex[48] += 0.002f;
 	}
 
 	if(timer)
@@ -238,8 +217,6 @@ GLvoid TimeEvent(int value)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, color.size() * sizeof(GLfloat), color.data(), GL_STATIC_DRAW);
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 1);
@@ -268,6 +245,10 @@ void initBuffer()
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, index.size() * sizeof(GLuint), index.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 }
