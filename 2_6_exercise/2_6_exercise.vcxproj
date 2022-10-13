@@ -133,6 +133,7 @@
     <ClInclude Include="make_Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="axes.glsl" />
     <None Include="fragment.glsl" />
     <None Include="vertex.glsl" />
   </ItemGroup>

@@ -54,6 +54,7 @@ GLboolean make_vertexShader()
 		return false;
 	}
 }
+
 GLboolean make_fragementShader()
 {
 	GLchar* fragmentSource;

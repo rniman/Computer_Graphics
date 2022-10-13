@@ -2,9 +2,6 @@
 
 #include "make_Shader.h"
 #include <vector>
-#include <random>
-#include <cmath>
-
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
@@ -20,38 +17,136 @@ GLint check_mouse_point(const GLfloat& ox, const GLfloat& oy, const std::vector<
 GLboolean isInside(const GLfloat& ox, const GLfloat& oy, const std::vector<GLfloat>& ver);
 
 
-const GLint window_w = 800, window_h = 600;
+const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
 GLint oldx, oldy;
 GLint left_click = -1;
 
 
-GLuint vao;
+GLuint vao[3];
+GLuint vbo_axes[2];
 GLuint vbo[2];
+unsigned int modelLocation;
 
-std::random_device rd;
-std::mt19937 gen(rd());
+glm::mat4 coordinate_axes(1.0f);
 
-std::vector<GLfloat> vertex =
+std::vector<GLfloat> axes =
 {
-	-0.5f, 0.5f, 0.0f,
-	-0.5f, -0.5f, 0.0f,
-	0.5f,-0.5f, 0.0f,
-	0.5f, 0.5f, 0.0f
-
-	/*-0.5f, 0.5f, 0.0f,
-	0.5f, -0.5f, 0.0f,
-	0.5f, 0.5f, 0.0f*/
+	-1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+	0.0f,1.0f,1.0f,
+	0.0f,-1.0f,1.0f
 };
+
+std::vector<GLfloat> hexa_vertex =
+{
+	//앞면
+	-0.3f,0.3f,0.3f,
+	-0.3f,-0.3f,0.3f,
+	0.3f,0.3f,0.3f,
+
+	-0.3f,-0.3f,0.3f,
+	0.3f,-0.3f,0.3f,
+	0.3f,0.3f,0.3f,
+
+	//오른쪽면
+	0.3f,0.3f,0.3f,
+	0.3f,-0.3f,0.3f,
+	0.3f,0.3f,-0.3f,
+
+	0.3f,-0.3f,0.3f,
+	0.3f,-0.3f,-0.3f,
+	0.3f,0.3f,-0.3f,
+
+	//뒷면
+	0.3f,0.3f,-0.3f,
+	0.3f,-0.3f,-0.3f,
+	-0.3f,0.3f,-0.3f,
+
+	0.3f,-0.3f,-0.3f,
+	-0.3f,-0.3f,-0.3f,
+	-0.3f,0.3f,-0.3f,
+
+	//왼쪽면
+	-0.3f,0.3f,-0.3f,
+	-0.3f,-0.3f,-0.3f,
+	-0.3f,0.3f,0.3f,
+
+	-0.3f,-0.3f,-0.3f,
+	-0.3f,-0.3f,0.3f,
+	-0.3f,0.3f,0.3f,
+
+	//윗면
+	-0.3f,0.3f,-0.3f,
+	-0.3f,0.3f,0.3f,
+	0.3f,0.3f,-0.3f,
+
+	-0.3f,0.3f,0.3f,
+	0.3f,0.3f,0.3f,
+	0.3f,0.3f,-0.3f,
+
+	//아랫면
+	-0.3f,-0.3f,0.3f,
+	-0.3f,-0.3f,-0.3f,
+	0.3f,-0.3f,0.3f,
+
+	-0.3f,-0.3f,-0.3f,
+	0.3f,-0.3f,-0.3f,
+	0.3f,-0.3f,0.3f,
+};
+
+std::vector<GLfloat> color_2 =
+{
+	0.0f,0.0f,0.0f,
+	0.0f,0.0f,0.0f,
+	0.0f,0.0f,0.0f,
+	0.0f,0.0f,0.0f
+};
+
 
 std::vector<GLfloat> color =
 {
+	1.0f,1.0f,0.0f,
+	1.0f,1.0f,0.0f,
+	1.0f,1.0f,0.0f,
+	1.0f,1.0f,0.0f,
+	1.0f,1.0f,0.0f,
+	1.0f,1.0f,0.0f,
+		
 	0.0f,1.0f,0.0f,
 	0.0f,1.0f,0.0f,
 	0.0f,1.0f,0.0f,
 	0.0f,1.0f,0.0f,
-	//0.0f,1.0f,0.0f,
-	//0.0f,1.0f,0.0f
+	0.0f,1.0f,0.0f,
+	0.0f,1.0f,0.0f,
+		
+	1.0f,1.0f,1.0f,
+	1.0f,1.0f,1.0f,
+	1.0f,1.0f,1.0f,
+	1.0f,1.0f,1.0f,
+	1.0f,1.0f,1.0f,
+	1.0f,1.0f,1.0f,
+		
+	1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+	1.0f,0.0f,1.0f,
+		
+	0.0f,0.0f,1.0f,
+	0.0f,0.0f,1.0f,
+	0.0f,0.0f,1.0f,
+	0.0f,0.0f,1.0f,
+	0.0f,0.0f,1.0f,
+	0.0f,0.0f,1.0f,
+		
+	1.0f,0.0f,0.0f,
+	1.0f,0.0f,0.0f,
+	1.0f,0.0f,0.0f,
+	1.0f,0.0f,0.0f,
+	1.0f,0.0f,0.0f,
+	1.0f,0.0f,0.0f,
 };
 
 int main(int argc, char** argv)
@@ -76,10 +171,9 @@ int main(int argc, char** argv)
 	glutMotionFunc(MouseMotion);
 	glutKeyboardFunc(KeyEvent);
 
-
-
 	glutMainLoop();
 }
+
 
 GLvoid drawScene()
 {
@@ -88,14 +182,21 @@ GLvoid drawScene()
 
 	//랜더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderID);
+	
+	glm::mat4 Rz = glm::mat4(1.0f);
 
-	glBindVertexArray(vao);
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
 
-	glDrawArrays(GL_LINE_LOOP, 0, vertex.size() / 3);
+	//좌표축 그리기
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(coordinate_axes));
+	glBindVertexArray(vao[0]);
+	glDrawArrays(GL_LINES, 0, 4);
 
-	glPointSize(10);
-	glDrawArrays(GL_POINTS, 0, vertex.size() / 3);
-
+	Rz = glm::rotate(Rz, glm::radians(10.0f), glm::vec3(1.0, 0.0, 0.0));
+	Rz = glm::rotate(Rz, glm::radians(10.0f), glm::vec3(0.0, 1.0, 0.0));
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(Rz));
+	glBindVertexArray(vao[1]);
+	glDrawArrays(GL_TRIANGLES, 0, hexa_vertex.size() / 3);
 	glutSwapBuffers();
 }
 
@@ -106,54 +207,11 @@ GLvoid Reshape(int w, int h)
 
 GLvoid MouseClick(int button, int state, int x, int y)
 {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		//점이 어디를 눌렀는지
-		//점들
-		GLfloat temp_ox, temp_oy;
-		convert_WindowXY_OpenglXY(x, y, temp_ox, temp_oy);
 
-		left_click = check_mouse_point(temp_ox, temp_oy, vertex);
-		if (left_click >= 0)
-		{
-			oldx = x;
-			oldy = y;
-		}
-
-		//사각형 내부
-	}
-	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-	{
-		left_click = -1;
-	}
 }
 
 GLvoid MouseMotion(int x, int y)
 {
-	if (left_click == 0) //사각형 클릭
-	{
-		GLfloat temp_ox, temp_oy;
-		GLfloat old_ox, old_oy;
-		convert_WindowXY_OpenglXY(x, y, temp_ox, temp_oy);
-		convert_WindowXY_OpenglXY(oldx, oldy, old_ox, old_oy);
-
-		for (int i = 0; i < 4; ++i)
-		{
-			vertex[3 * i] += temp_ox - old_ox;
-			vertex[3 * i + 1] += temp_oy - old_oy;
-		}
-		oldx = x;
-		oldy = y;
-		glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
-	}
-	else if (left_click > 0) //왼쪽 위점 클릭
-	{
-		GLfloat temp_ox, temp_oy;
-		convert_WindowXY_OpenglXY(x, y, temp_ox, temp_oy);
-		vertex[(left_click - 1) * 3] = temp_ox;
-		vertex[(left_click - 1) * 3 + 1] = temp_oy;
-		glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
-	}
 
 	glutPostRedisplay();
 }
@@ -162,23 +220,39 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 {
 	if (key == 'q')
 		glutExit();
+
 }
 
 void initBuffer()
 {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
+	glGenVertexArrays(3, vao);
+	glBindVertexArray(vao[0]);
+	glGenBuffers(2, vbo_axes);
 	glGenBuffers(2, vbo);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_axes[1]);
+	glBufferData(GL_ARRAY_BUFFER, color_2.size() * sizeof(GLfloat), color_2.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_axes[0]);
+	glBufferData(GL_ARRAY_BUFFER, axes.size() * sizeof(GLfloat), axes.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(vao[1]);
+	
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, color.size() * sizeof(GLfloat), color.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, vertex.size() * sizeof(GLfloat), vertex.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, hexa_vertex.size() * sizeof(GLfloat), hexa_vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
+	
 }
 
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy)
