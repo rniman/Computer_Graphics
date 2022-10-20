@@ -15,33 +15,15 @@ const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
 GLboolean culling_on = true;
 GLboolean fill_on = false;
-GLboolean revolution = false;
-GLboolean revolution_dir = true;
 GLboolean pause = false;
 GLboolean key_c = false;
 GLboolean key_t = false;
 GLboolean key_m = false;
+GLboolean key_r = false;
 
-
-GLint degree_rev = 0;
-
-GLboolean left_obj_rotete_x = false;
-GLboolean left_obj_rotete_y = false;
-GLboolean left_dir_x = true;
-GLboolean left_dir_y = true;
-GLint degree_left = 0;
-GLint degree_left_y = 0;
-
-
-
-GLboolean right_obj_rotete_x = false;
-GLboolean right_obj_rotete_y = false;
-GLboolean right_dir_x = true;
-GLboolean right_dir_y = true;
-GLint degree_right = 0;
-GLint degree_right_y = 0;
-
-
+GLfloat left_scale = 1.0f;
+GLfloat right_scale = 1.0f;
+GLfloat all_scale = 1.0f;
 
 GLuint vao[5];
 GLuint vbo_axes[2];
@@ -56,18 +38,14 @@ unsigned int viewLocation;
 glm::mat4 camera;
 
 axes_coordination axes;
+glm::mat4 tonado_transformation = glm::mat4(1.0f);
 glm::mat4 hexa_trasformation = glm::mat4(1.0f);
 glm::mat4 sphere_trasformation = glm::mat4(1.0f);
 
 objRead sphere;
 GLint sphere_size = sphere.loadObj_normalize_center("sphere.obj");
 
-objRead cylinder;
-GLint cylinder_size = cylinder.loadObj_normalize_center("cylinder.obj");
-
-objRead cone;
-GLint cone_size = cone.loadObj_normalize_center("cone.obj");
-
+std::vector<GLfloat> tonado_vertex;
 
 std::vector<GLfloat> hexa_vertex =
 {
@@ -180,7 +158,7 @@ int main(int argc, char** argv)
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowPosition(300, 200);
+	glutInitWindowPosition(300, 50);
 	glutInitWindowSize(window_w, window_h);
 	glutCreateWindow("Example_3_3(14번)");
 
@@ -189,6 +167,19 @@ int main(int argc, char** argv)
 
 	//세이더 읽어와서 세이더 프로그램 만들기
 
+	GLint angle = 0;
+	GLfloat radius = 0;
+
+	for (int i = 0; i < 18 * 11 + 1; ++i) {
+		tonado_vertex.push_back(radius * (cos(M_PI * angle / 180)));
+		tonado_vertex.push_back(0.0f);
+		tonado_vertex.push_back(radius * (sin(M_PI * angle / 180)));
+		angle += 10;
+		radius += 0.005;
+		
+		
+	}
+	
 	shaderID = make_shaderProgram();	//세이더 프로그램 만들기
 	initBuffer();
 
@@ -205,7 +196,9 @@ int main(int argc, char** argv)
 	viewLocation = glGetUniformLocation(shaderID, "viewTransform");
 
 	camera = glm::lookAt(glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
-
+	//camera = glm::lookAt(glm::vec3(0.0f, 0.1f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
+	//camera = glm::lookAt(glm::vec3(0.1f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.1f, 0.0f));
+	//camera = glm::lookAt(glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.0f, 0.2f, -0.0f));
 
 	hexa_trasformation = glm::mat4(1.0f);
 	hexa_trasformation = glm::translate(hexa_trasformation, glm::vec3(0.0f, 0.0f, -0.5f));
@@ -235,30 +228,25 @@ GLvoid drawScene()
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_LINES, 0, 6);
 
-	if (!key_c)
+	//회오리 그리기
+	if (key_r)
 	{
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(tonado_transformation));
+		glBindVertexArray(vao[3]);
+		glDrawArrays(GL_LINE_STRIP, 0, tonado_vertex.size() / 3);
+	}
+
+
 		//육면체 그리기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(hexa_trasformation));
-		glBindVertexArray(vao[1]);
-		glDrawArrays(GL_TRIANGLES, 0, hexa_vertex.size() / 3);
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(hexa_trasformation));
+	glBindVertexArray(vao[1]);
+	glDrawArrays(GL_TRIANGLES, 0, hexa_vertex.size() / 3);
 
 		//구 그리기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphere_trasformation));
-		glBindVertexArray(vao[2]);
-		glDrawArrays(GL_TRIANGLES, 0, sphere_size);
-	}
-	else
-	{
-		//실린더 그리기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(hexa_trasformation));
-		glBindVertexArray(vao[3]);
-		glDrawArrays(GL_TRIANGLES, 0, cylinder_size);
-
-		//콘 그리기
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphere_trasformation));
-		glBindVertexArray(vao[4]);
-		glDrawArrays(GL_TRIANGLES, 0, cone_size);
-	}
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphere_trasformation));
+	glBindVertexArray(vao[2]);
+	glDrawArrays(GL_TRIANGLES, 0, sphere_size);
+	
 
 	glutSwapBuffers();
 }
@@ -268,10 +256,33 @@ GLvoid Reshape(int w, int h)
 	glViewport(0, 0, w, h);
 }
 
-GLfloat left_obj_x = -0.5f;
-GLfloat right_obj_x = 0.5f;
+GLfloat left_obj_x = 0.0f;
+GLfloat left_obj_y = 0.0f;
+GLfloat left_obj_z = -0.5f;
+GLfloat Lold_obj_x = left_obj_x;
+GLfloat Lold_obj_y = left_obj_y;
+GLfloat Lold_obj_z = left_obj_z;
+GLfloat left_delta_x;
+GLfloat left_delta_y;
+GLfloat left_delta_z;
+GLuint left_index = 0;
+
+
+GLfloat right_obj_x = 0.0f;
+GLfloat right_obj_y = 0.0f;
+GLfloat right_obj_z = 0.5f;
+GLfloat Rold_obj_x = right_obj_x;
+GLfloat Rold_obj_y = right_obj_y;
+GLfloat Rold_obj_z = right_obj_z;
+GLfloat right_delta_x;
+GLfloat right_delta_y;
+GLfloat right_delta_z;
+GLuint right_index = 3 * (9 * 11);
+
 GLboolean t_state = true;
+GLint t_time = 0;
 GLboolean m_state = true;
+
 
 GLvoid TimeEvent(int value)
 {
@@ -281,100 +292,85 @@ GLvoid TimeEvent(int value)
 	hexa_trasformation = glm::mat4(1.0f);
 	sphere_trasformation = glm::mat4(1.0f);
 
-	hexa_trasformation = glm::rotate(hexa_trasformation, glm::radians((GLfloat)degree_rev), glm::vec3(0.0f, 1.0f, 0.0f));
-	sphere_trasformation = glm::rotate(sphere_trasformation, glm::radians((GLfloat)degree_rev), glm::vec3(0.0f, 1.0f, 0.0f));
-	if (revolution)
-	{
-		if (revolution_dir)
-			degree_rev = (degree_rev + 10) % 360;
-		else
-			degree_rev = (degree_rev - 10) % 360;
-	}
 
 	if (key_t)
 	{
+		t_time++;
 		if (t_state)
 		{
-			left_obj_x += 0.01f;
-			right_obj_x -= 0.01f;
+			left_obj_x -= left_delta_x;
+			left_obj_y -= left_delta_y;
+			left_obj_z -= left_delta_z;
+			right_obj_x -= right_delta_x;
+			right_obj_y -= right_delta_y;
+			right_obj_z -= right_delta_z;
 		}
 		else
 		{
-			left_obj_x -= 0.01f;
-			right_obj_x += 0.01f;
+			left_obj_x += left_delta_x;
+			left_obj_y += left_delta_y;
+			left_obj_z += left_delta_z;
+			right_obj_x += right_delta_x;
+			right_obj_y += right_delta_y;
+			right_obj_z += right_delta_z;
 		}
 
-		if (left_obj_x >= 0.0f)
-			t_state = false;
-		else if (left_obj_x <= -0.5f)
-			t_state = true;
+		if (t_time % 100 == 0)
+			t_state = t_state ? false : true;
+
 	}
 	else if (key_m)
 	{
+		t_time++;
+
 		if (m_state) 
 		{
-			left_obj_x += 0.01f;
-			right_obj_x -= 0.01f;
+			left_obj_x -= left_delta_x;
+			left_obj_y -= left_delta_y;
+			left_obj_z -= left_delta_z;
+			right_obj_x -= right_delta_x;
+			right_obj_y -= right_delta_y;
+			right_obj_z -= right_delta_z;
 		}
 		else
 		{
-			left_obj_x -= 0.01f;
-			right_obj_x += 0.01f;
+			left_obj_x += left_delta_x;
+			left_obj_y += left_delta_y;
+			left_obj_z += left_delta_z;
+			right_obj_x += right_delta_x;
+			right_obj_y += right_delta_y;
+			right_obj_z += right_delta_z;
 		}
 
-		if (left_obj_x >= 0.5f)
-		{
-			key_m = false;
-			m_state = false;
-		}
-		else if (left_obj_x <= -0.5f)
-		{
-			key_m = false;
-			m_state = true;
-		}
+		if (t_time % 100 == 0)
+			m_state = m_state ? false : true;
 	}
-
-	hexa_trasformation = glm::translate(hexa_trasformation, glm::vec3(0.0f, 0.0f, left_obj_x));
-	sphere_trasformation = glm::translate(sphere_trasformation, glm::vec3(0.0f, 0.0f, right_obj_x));
-
-
-
-
-	if (left_obj_rotete_x)
+	else if (key_r)
 	{
-		if (left_dir_x)
-			degree_left = (degree_left + 10) % 360;
-		else
-			degree_left = (degree_left - 10) % 360;
-		hexa_trasformation = glm::rotate(hexa_trasformation, glm::radians((GLfloat)degree_left), glm::vec3(1.0f, 0.0f, 0.0f));
+		left_index += 3;
+		right_index += 3;
+
+		if (left_index > 3 * (18 * 11))
+			left_index = 0;
+		
+		if (right_index > 3 * (18 * 11))
+			right_index = 0;
+
+		left_obj_x = tonado_vertex[left_index];
+		left_obj_z = tonado_vertex[left_index + 2];
+
+		right_obj_x = tonado_vertex[right_index];
+		right_obj_z = tonado_vertex[right_index + 2];
 	}
 
-	if (left_obj_rotete_y)
-	{
-		if (left_dir_y)
-			degree_left_y = (degree_left_y + 10) % 360;
-		else
-			degree_left_y = (degree_left_y - 10) % 360;
-		hexa_trasformation = glm::rotate(hexa_trasformation, glm::radians((GLfloat)degree_left_y), glm::vec3(0.0f, 1.0f, 0.0f));
-	}
+	hexa_trasformation = glm::scale(hexa_trasformation, glm::vec3(all_scale, all_scale, all_scale));
+	sphere_trasformation = glm::scale(sphere_trasformation, glm::vec3(all_scale, all_scale, all_scale));
 
-	if (right_obj_rotete_x)
-	{
-		if (right_dir_x)
-			degree_right = (degree_right + 10) % 360;
-		else
-			degree_right = (degree_right - 10) % 360;
-		sphere_trasformation = glm::rotate(sphere_trasformation, glm::radians((GLfloat)degree_right), glm::vec3(1.0f, 0.0f, 0.0f));
-	}
+	hexa_trasformation = glm::translate(hexa_trasformation, glm::vec3(left_obj_x, left_obj_y, left_obj_z));
+	sphere_trasformation = glm::translate(sphere_trasformation, glm::vec3(right_obj_x, right_obj_y, right_obj_z));
 
-	if (right_obj_rotete_y)
-	{
-		if (right_dir_y)
-			degree_right_y = (degree_right_y + 10) % 360;
-		else
-			degree_right_y = (degree_right_y - 10) % 360;
-		sphere_trasformation = glm::rotate(sphere_trasformation, glm::radians((GLfloat)degree_right_y), glm::vec3(0.0f, 1.0f, 0.0f));
-	}
+	hexa_trasformation = glm::scale(hexa_trasformation, glm::vec3(left_scale, left_scale, left_scale));
+	sphere_trasformation = glm::scale(sphere_trasformation, glm::vec3(right_scale, right_scale, right_scale));
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -404,43 +400,93 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	}
 	else if (key == 'x')
 	{
-		left_obj_rotete_x = true;
-		left_dir_x = true;
+		left_obj_x += 0.002f;
 	}
 	else if (key == 'X')
 	{
-		left_obj_rotete_x = true;
-		left_dir_x = false;
+		left_obj_x -= 0.002f;
 	}
 	else if (key == 'y')
 	{
-		left_obj_rotete_y = true;
-		left_dir_y = true;
+		left_obj_y += 0.002f;
 	}
 	else if (key == 'Y')
 	{
-		left_obj_rotete_y = true;
-		left_dir_y = false;
+		left_obj_y -= 0.002f;
+	}
+	else if (key == 'z')
+	{
+		left_obj_z += 0.002f;
+	}
+	else if (key == 'Z')
+	{
+		left_obj_z -= 0.002f;
 	}
 	else if (key == 'a')
 	{
-		right_obj_rotete_x = true;
-		right_dir_x = true;
+		right_obj_x += 0.002f;
 	}
 	else if (key == 'A')
 	{
-		right_obj_rotete_x = true;
-		right_dir_x = false;
+		right_obj_x -= 0.002f;
 	}
 	else if (key == 'b')
 	{
-		right_obj_rotete_y = true;
-		right_dir_y = true;
+		right_obj_y += 0.002f;
 	}
 	else if (key == 'B')
 	{
-		right_obj_rotete_y = true;
-		right_dir_y = false;
+		right_obj_y -= 0.002f;
+	}
+	else if (key == 'c')
+	{
+		right_obj_z += 0.002f;
+	}
+	else if (key == 'C')
+	{
+		right_obj_z -= 0.002f;
+	}
+	else if (key == 'g')
+	{
+		left_scale += 0.005f;
+	}
+	else if (key == 'G')
+	{
+		left_scale -= 0.005f;
+	}
+	else if (key == 'f')
+	{
+		right_scale += 0.005f;
+	}
+	else if (key == 'F')
+	{
+		right_scale -= 0.005f;
+	}
+	else if (key == '1')
+	{
+		all_scale += 0.005f;
+	}
+	else if (key == '2')
+	{
+		all_scale -= 0.005f;
+	}
+	else if (key == '3')
+	{
+		left_obj_y += 0.002f;
+		right_obj_y += 0.002f;
+		axes.transformations = glm::translate(axes.transformations, glm::vec3(0.0f, 0.002f, 0.0f));
+		tonado_transformation = glm::translate(tonado_transformation, glm::vec3(0.0f, 0.002f, 0.0f));
+	}
+	else if (key == '4')
+	{
+		left_obj_y -= 0.002f;
+		right_obj_y -= 0.002f;
+		axes.transformations = glm::translate(axes.transformations, glm::vec3(0.0f, -0.002f, 0.0f));
+		tonado_transformation = glm::translate(tonado_transformation, glm::vec3(0.0f, -0.002f, 0.0f));
+	}
+	else if (key == 'o')
+	{
+		key_c = key_c ? false : true;
 	}
 	else if (key == 'w')
 	{
@@ -452,49 +498,94 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	}
 	else if (key == 'r')
 	{
-		revolution = true;
-		revolution_dir = true;
-	}
-	else if (key == 'R')
-	{
-		revolution = true;
-		revolution_dir = false;
+		key_r = key_r ? false : true;
+		if (key_r)
+		{
+			left_obj_x = tonado_vertex[0];
+			left_obj_y = 0.0f;
+			left_obj_z = tonado_vertex[2];
+
+			right_obj_x = tonado_vertex[3 * (9 * 11)];
+			right_obj_y = 0.0f;
+			right_obj_z = tonado_vertex[3 * (9 * 11) + 2];
+		}
+		key_t = false;
+		key_m = false;
+		t_state = true;
+		m_state = true;
 	}
 	else if (key == 's')
 	{
-		revolution = false;
-		revolution_dir = true;
-
-		left_obj_rotete_x = false;
-		left_obj_rotete_y = false;
-		left_dir_x = true;
-		left_dir_y = true;
-		right_obj_rotete_x = false;
-		right_obj_rotete_y = false;
-		right_dir_x = true;
-		right_dir_y = true;
-
-		degree_left = 0;
-		degree_right = 0;
-		degree_rev = 0;
-
-		left_obj_x = -0.5f;
-		right_obj_x = 0.5f;
+		left_obj_x = 0.0f;
+		left_obj_y = 0.0f;
+		left_obj_z = -0.5f;
+		right_obj_x = 0.0f;
+		right_obj_y = 0.0f;
+		right_obj_z = 0.5f;
+		left_scale = 1.0f;
+		right_scale = 1.0f;
+		all_scale = 1.0f;
+		axes.transformations = glm::mat4(1.0f);
 		t_state = true;
-	}
-	else if (key == 'c')
-	{
-		key_c = key_c ? false : true;
+		m_state = true;
+		key_t = false;
+		key_m = false;
+		key_r = false;
 	}
 	else if (key == 't')
 	{
 		key_t = key_t ? false : true;
+		if (key_t)
+		{
+			t_time = 0;
+
+			Lold_obj_x = left_obj_x;
+			Lold_obj_y = left_obj_y;
+			Lold_obj_z = left_obj_z;
+
+			Rold_obj_x = right_obj_x;
+			Rold_obj_y = right_obj_y;
+			Rold_obj_z = right_obj_z;
+
+			left_delta_x = left_obj_x / 100.0f;
+			left_delta_y = left_obj_y / 100.0f;
+			left_delta_z = left_obj_z / 100.0f;
+
+			right_delta_x = right_obj_x / 100.0f;
+			right_delta_y = right_obj_y / 100.0f;
+			right_delta_z = right_obj_z / 100.0f;
+
+		}
 		key_m = false;
+		m_state = true;
+		key_r = false;
 	}
 	else if (key == 'm')
 	{		
 		key_m = key_m ? false : true;
+		if (key_m)
+		{
+			t_time = 0;
+
+			Lold_obj_x = left_obj_x;
+			Lold_obj_y = left_obj_y;
+			Lold_obj_z = left_obj_z;
+
+			Rold_obj_x = right_obj_x;
+			Rold_obj_y = right_obj_y;
+			Rold_obj_z = right_obj_z;
+
+			left_delta_x = (left_obj_x - right_obj_x) / 100.0f;
+			left_delta_y = (left_obj_y - right_obj_y) / 100.0f;
+			left_delta_z = (left_obj_z - right_obj_z) / 100.0f;
+
+			right_delta_x = (right_obj_x - left_obj_x) / 100.0f;
+			right_delta_y = (right_obj_y - left_obj_y) / 100.0f;
+			right_delta_z = (right_obj_z - left_obj_z) / 100.0f;
+		}
 		key_t = false;
+		t_state = true;
+		key_r = false;
 	}
 }
 
@@ -553,19 +644,8 @@ void initBuffer()
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_cylinder[0]);
-	glBufferData(GL_ARRAY_BUFFER, cylinder.outvertex.size() * sizeof(glm::vec3), cylinder.outvertex.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, tonado_vertex.size() * sizeof(GLfloat), tonado_vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindVertexArray(vao[4]);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_cone[1]);
-	glBufferData(GL_ARRAY_BUFFER, obj_color.size() * sizeof(GLfloat), obj_color.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_cone[0]);
-	glBufferData(GL_ARRAY_BUFFER, cone.outvertex.size() * sizeof(glm::vec3), cone.outvertex.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
 }

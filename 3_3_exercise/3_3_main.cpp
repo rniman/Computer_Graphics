@@ -195,8 +195,9 @@ int main(int argc, char** argv)
 	glutTimerFunc(100, TimeEvent, 0);
 	glutKeyboardFunc(KeyEvent);
 
-	//glEnable(GL_DEPTH_TEST);
+	
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	glPolygonMode(GL_FRONT, GL_LINE);
 
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
