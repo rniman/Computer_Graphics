@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(300, 50);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_3_3(14번)");
+	glutCreateWindow("Example_3_4(15번)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -176,8 +176,6 @@ int main(int argc, char** argv)
 		tonado_vertex.push_back(radius * (sin(M_PI * angle / 180)));
 		angle += 10;
 		radius += 0.005;
-		
-		
 	}
 	
 	shaderID = make_shaderProgram();	//세이더 프로그램 만들기
@@ -531,6 +529,8 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		key_t = false;
 		key_m = false;
 		key_r = false;
+		left_index = 0;
+		right_index = 3 * (9 * 11);;
 	}
 	else if (key == 't')
 	{
