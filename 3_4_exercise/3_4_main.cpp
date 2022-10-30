@@ -205,6 +205,8 @@ int main(int argc, char** argv)
 	sphere_trasformation = glm::mat4(1.0f);
 	sphere_trasformation = glm::translate(sphere_trasformation, glm::vec3(0.0f, 0.0f, 0.5f));
 
+
+
 	glutMainLoop();
 }
 

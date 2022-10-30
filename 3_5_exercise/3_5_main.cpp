@@ -14,9 +14,22 @@ GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& o
 const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
 
-GLuint vao[11];
+
+GLboolean hexa = true;
+
+namespace keyState
+{
+	GLboolean h = true;
+	GLboolean t = false;
+	GLboolean f = false;
+	GLboolean g = false;
+	GLboolean o = false;
+	GLboolean p = false;
+}
+
+GLuint vao[12];
 GLuint vbo_axes[2];
-GLuint plane_vbo[2*10];
+GLuint plane_vbo[11][2];
 
 unsigned int modelLocation;
 unsigned int viewLocation;
@@ -27,8 +40,16 @@ glm::mat4 projection;
 glm::mat4 view;
 
 axes_coordination axes;
-glm::mat4 hexa_trasformation = glm::mat4(1.0f);
+glm::mat4 hexa_trasformation[6];
+glm::mat4 tetra_transformation[5];
 
+GLfloat frontAngle = 0.0f;
+GLboolean openFront = true;
+GLfloat sideMove = 0.0f;
+GLboolean openSide = true;
+
+GLfloat tetraAngle = 0.0f;
+GLboolean openTetra = true;
 
 class polygon
 {
@@ -40,7 +61,7 @@ public:
 std::vector<std::vector<GLfloat>> hexa_plane =
 {
 	{
-		//¾Õ¸é
+		//¿Þ¸é 0
 		-100.0f,100.0f,100.0f,
 		-100.0f,-100.0f,100.0f,
 		100.0f,100.0f,100.0f,
@@ -51,7 +72,7 @@ std::vector<std::vector<GLfloat>> hexa_plane =
 	},
 
 	{
-		//¿ÞÂÊ¸é
+		//¾Õ¸é 1
 		100.0f,100.0f,100.0f,
 		100.0f,-100.0f,100.0f,
 		100.0f,100.0f,-100.0f,
@@ -61,7 +82,7 @@ std::vector<std::vector<GLfloat>> hexa_plane =
 		100.0f,100.0f,-100.0f
 	},
 	{
-		//µÞ¸é
+		//¿À¸¥¸é 2
 		100.0f,100.0f,-100.0f,
 		100.0f,-100.0f,-100.0f,
 		-100.0f,100.0f,-100.0f,
@@ -71,7 +92,7 @@ std::vector<std::vector<GLfloat>> hexa_plane =
 		-100.0f,100.0f,-100.0f
 	},
 	{
-		//¿À¸¥ÂÊ¸é
+		//µÞ¸é 3
 		-100.0f,100.0f,-100.0f,
 		-100.0f,-100.0f,-100.0f,
 		-100.0f,100.0f,100.0f,
@@ -81,7 +102,7 @@ std::vector<std::vector<GLfloat>> hexa_plane =
 		-100.0f,100.0f,100.0f
 	},
 	{
-		//À­¸é
+		//À­¸é 4
 		-100.0f,100.0f,-100.0f,
 		-100.0f,100.0f,100.0f,
 		100.0f,100.0f,-100.0f,
@@ -91,7 +112,7 @@ std::vector<std::vector<GLfloat>> hexa_plane =
 		100.0f,100.0f,-100.0f
 	},
 	{
-		//¾Æ·§¸é
+		//¾Æ·§¸é 5
 		-100.0f,-100.0f,100.0f,
 		-100.0f,-100.0f,-100.0f,
 		100.0f,-100.0f,100.0f,
@@ -154,14 +175,81 @@ std::vector<std::vector<GLfloat>> hexa_color =
 	}
 };
 
+std::vector<std::vector<GLfloat>> tetra_plane =
+{
+	
+	{//¹Ø¸é
+		-100.0f, 0.0f, 100.0f,
+		-100.0f, 0.0f, -100.0f,
+		100.0f, 0.0f, 100.0f,
+
+		-100.0f, 0.0f,-100.0f,
+		100.0f, 0.0f,-100.0f,
+		100.0f, 0.0f,100.0f
+	},
+	{//¾Õ¸é
+		100.0f, 0.0f, 100.0f,
+		100.0f, 0.0f, -100.0f,
+		0.0f, 100.0f, 0.0f
+	},
+	{//µÞ¸é
+		-100.0f, 0.0f, 100.0f,
+		-100.0f, 0.0f, -100.0f,
+		0.0f, 100.0f, 0.0f
+	},
+	{//¿À¸¥¸é
+		100.0f, 0.0f, -100.0f,
+		-100.0f, 0.0f, -100.0f,
+		0.0f, 100.0f, 0.0f
+	},
+	{//¿Þ¸é
+		-100.0f, 0.0f, 100.0f,
+		100.0f, 0.0f, 100.0f,
+		0.0f, 100.0f, 0.0f
+	}
+};
+std::vector<std::vector<GLfloat>> tetra_color =
+{
+	{
+		1.0f,1.0f,1.0f,
+		1.0f,1.0f,1.0f,
+		1.0f,1.0f,1.0f,
+		1.0f,1.0f,1.0f,
+		1.0f,1.0f,1.0f,
+		1.0f,1.0f,1.0f
+	},
+	{
+		1.0f,0.0f,1.0f,
+		1.0f,0.0f,1.0f,
+		1.0f,0.0f,1.0f
+	},
+	{
+		0.0f,0.0f,1.0f,
+		0.0f,0.0f,1.0f,
+		0.0f,0.0f,1.0f
+	},
+	{
+		1.0f,0.0f,0.0f,
+		1.0f,0.0f,0.0f,
+		1.0f,0.0f,0.0f
+	},
+	{
+		0.0f,0.0f,0.0f,
+		0.0f,0.0f,0.0f,
+		0.0f,0.0f,0.0f
+	}
+};
 
 int main(int argc, char** argv)
 {
-	for (auto& e : hexa_plane[0])
-	{
-		std::cout << e << std::endl;
-	}
 	
+	for (auto& e : tetra_plane)
+	{
+		for (auto& a : e)
+			std::cout << a << ' ';
+		std::cout << std::endl;
+	}
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(300, 50);
@@ -182,7 +270,7 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(KeyEvent);
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
@@ -190,8 +278,8 @@ int main(int argc, char** argv)
 	projLocation = glGetUniformLocation(shaderID, "projectionTransform");
 
 
-	camera = glm::lookAt(glm::vec3(200.0f, 200.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
-	//camera = glm::lookAt(glm::vec3(0.0f, 300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
+	camera = glm::lookAt(glm::vec3(200.0f, 100.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
+	//camera = glm::lookAt(glm::vec3(0.0f, -300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
 	//camera = glm::lookAt(glm::vec3(0.1f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.1f, 0.0f));
 	//camera = glm::lookAt(glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.0f, 0.2f, -0.0f));
 
@@ -201,8 +289,11 @@ int main(int argc, char** argv)
 	//projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 400.0f);
 	//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0));
 
-	hexa_trasformation = glm::mat4(1.0f);
-	hexa_trasformation = glm::translate(hexa_trasformation, glm::vec3(0.0f, 0.0f, -100.0f));
+	for (int i = 0; i < 6; ++i)
+		hexa_trasformation[i] = glm::mat4(1.0f);
+	for (int i = 0; i < 5; ++i)
+		tetra_transformation[i] = glm::mat4(1.0f);
+	
 
 	glutMainLoop();
 }
@@ -231,15 +322,26 @@ GLvoid drawScene()
 	glDrawArrays(GL_LINES, 0, 6);
 
 
-	//À°¸éÃ¼ ±×¸®±â
-	for (int i = 0; i < 6; ++i)
+	if (hexa)
 	{
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(hexa_trasformation));
-		glBindVertexArray(vao[1]);
-		glDrawArrays(GL_TRIANGLES, 0, hexa_plane[i].size() / 3);
+		//À°¸éÃ¼ ±×¸®±â
+		for (int i = 0; i < 6; ++i)
+		{
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(hexa_trasformation[i]));
+			glBindVertexArray(vao[i + 1]);
+			glDrawArrays(GL_TRIANGLES, 0, hexa_plane[i].size() / 3);
+		}
+	}
+	else
+	{
+		for (int i = 6; i < 11; ++i)
+		{
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(tetra_transformation[i - 6]));
+			glBindVertexArray(vao[i + 1]);
+			glDrawArrays(GL_TRIANGLES, 0, tetra_plane[i - 6].size() / 3);
+		}
 	}
 	
-
 	glutSwapBuffers();
 }
 
@@ -251,6 +353,97 @@ GLvoid Reshape(int w, int h)
 
 GLvoid TimeEvent(int value)
 {
+	if (keyState::t)
+	{
+		hexa_trasformation[4] = glm::rotate(hexa_trasformation[4], glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+
+	if (keyState::f)
+	{
+		hexa_trasformation[1] = glm::mat4(1.0f);
+		if (openFront)
+			frontAngle -= 5.0f;
+		else
+			frontAngle += 5.0f;
+
+		hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(100.0f, -100.0f, 0.0f));
+		hexa_trasformation[1] = glm::rotate(hexa_trasformation[1], glm::radians(frontAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+		hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(-100.0f, 100.0f, 0.0f));
+
+		if (frontAngle <= -90.0f && openFront)
+		{
+			keyState::f = false;
+			openFront = false;
+		}
+		else if (frontAngle >= 0.0f && !openFront)
+		{
+			keyState::f = false;
+			openFront = true;
+		}
+	}
+
+	if (keyState::g)
+	{
+		hexa_trasformation[0] = glm::mat4(1.0f);
+		hexa_trasformation[2] = glm::mat4(1.0f);
+
+		if (openSide)
+			sideMove += 10.0f;
+		else
+			sideMove -= 10.0f;
+
+		hexa_trasformation[0] = glm::translate(hexa_trasformation[0], glm::vec3(0.0f, sideMove, 0.0f));
+		hexa_trasformation[2] = glm::translate(hexa_trasformation[2], glm::vec3(0.0f, sideMove, 0.0f));
+
+		if (sideMove >= 200.0f && openSide)
+		{
+			keyState::g = false;
+			openSide = false;
+		}
+		else if (sideMove <= 0.0f && !openSide)
+		{
+			keyState::g = false;
+			openSide = true;
+		}
+	}
+
+	if (keyState::o)
+	{
+		for (int i = 0; i < 4; ++i)
+			tetra_transformation[i + 1] = glm::mat4(1.0f);
+
+		if (openTetra)
+			tetraAngle += 10.0f;
+		else
+			tetraAngle -= 10.0f;
+
+		tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(100.0f, 0.0f, 0.0f));
+		tetra_transformation[1] = glm::rotate(tetra_transformation[1], glm::radians(-tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+		tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(-100.0f, 0.0f, 0.0f));
+
+		tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(-100.0f, 0.0f, 0.0f));
+		tetra_transformation[2] = glm::rotate(tetra_transformation[2], glm::radians(tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+		tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(100.0f, 0.0f, 0.0f));
+
+		tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, -100.0f));
+		tetra_transformation[3] = glm::rotate(tetra_transformation[3], glm::radians(-tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+		tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, 100.0f));
+
+		tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, 100.0f));
+		tetra_transformation[4] = glm::rotate(tetra_transformation[4], glm::radians(tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+		tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, -100.0f));
+
+		if (tetraAngle >= 270.0f && openTetra)
+		{
+			keyState::o = false;
+			openTetra = false;
+		}
+		else if (tetraAngle <= 0.0f && !openTetra)
+		{
+			keyState::o = false;
+			openTetra = true;
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -260,14 +453,83 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 {
 	if (key == 'q')
 		glutExit();
+	else if (key == 'h')
+	{
+
+		keyState::h = keyState::h ? false : true;
+		if (keyState::h)
+		{
+			glEnable(GL_DEPTH_TEST);
+			//glEnable(GL_CULL_FACE);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+			//glDisable(GL_CULL_FACE);
+		}
+	}
+	else if (key == 't' && hexa)
+	{
+		keyState::t = keyState::t ? false : true;
+	}
+	else if (key == 'f' && hexa)
+	{
+		keyState::f = keyState::f ? false : true;
+	}
+	else if (key == 'g' && hexa)
+	{
+		keyState::g = keyState::g ? false : true;
+	}
+	else if (key == 'c')
+	{
+		hexa = hexa ? false : true;
+
+		for (int i = 0; i < 6; ++i)
+			hexa_trasformation[i] = glm::mat4(1.0f);
+		for (int i = 0; i < 5; ++i)
+			tetra_transformation[i] = glm::mat4(1.0f);
+
+		keyState::t = false;
+		keyState::f = false;
+		keyState::g = false;
+		keyState::o = false;
+
+		frontAngle = 0.0f;
+		openFront = true;
+		sideMove = 0.0f;
+		openSide = true;
+
+		tetraAngle = 0.0f;
+		openTetra = true;
+	}
+	else if (key == 'o' && !hexa)
+	{
+		keyState::o = keyState::o ? false : true;
+	}
+	else if (key == 'p')
+	{
+		keyState::p = keyState::p ? false : true;
+		
+		projection = glm::mat4(1.0f);
+		if(keyState::p)
+			projection = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, 50.0f, 600.0f);
+		else
+		{
+			projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);
+			projection = glm::translate(projection, glm::vec3(0.0, 0.0, -100.0)); //-> ¾î¶²¿ø¸®ÀÎÁö ¸ð¸£°Ú´Ù
+		}
+	}
 }
 
 
 void initBuffer()
 {
-	glGenVertexArrays(11, vao);
+	glGenVertexArrays(12, vao);
 	glGenBuffers(2, vbo_axes);
-	glGenBuffers(20, plane_vbo);
+	for (int i = 0; i < 11; ++i)
+	{
+		glGenBuffers(2, plane_vbo[i]);
+	}
 
 	glBindVertexArray(vao[0]);
 
@@ -281,17 +543,35 @@ void initBuffer()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindVertexArray(vao[1]);
+	// À°¸éÃ¼ vbo vao
+	for (int i = 0; i < 6; ++i)
+	{
+		glBindVertexArray(vao[i + 1]);
 
-	glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, hexa_color[0].size() * sizeof(GLfloat), hexa_color[0].data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[i][1]);
+		glBufferData(GL_ARRAY_BUFFER, hexa_color[i].size() * sizeof(GLfloat), hexa_color[i].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, hexa_plane[0].size() * sizeof(GLfloat), hexa_plane[0].data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[i][0]);
+		glBufferData(GL_ARRAY_BUFFER, hexa_plane[i].size() * sizeof(GLfloat), hexa_plane[i].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
 
+	// »ç¸éÃ¼
+	for (int i = 6; i < 11; ++i)
+	{
+		glBindVertexArray(vao[i + 1]);
 
+		glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[i][1]);
+		glBufferData(GL_ARRAY_BUFFER, tetra_color[i - 6].size() * sizeof(GLfloat), tetra_color[i - 6].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, plane_vbo[i][0]);
+		glBufferData(GL_ARRAY_BUFFER, tetra_plane[i - 6].size() * sizeof(GLfloat), tetra_plane[i - 6].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+	}
 }
