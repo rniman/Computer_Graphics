@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "axes.h"
 #include "read_Obj.h"
+#include "Object.h"
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
@@ -14,9 +15,6 @@ GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& o
 const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
 
-
-GLboolean hexa = true;
-
 namespace keyState
 {
 	GLboolean h = true;
@@ -25,54 +23,46 @@ namespace keyState
 	GLboolean g = false;
 	GLboolean o = false;
 	GLboolean p = true;
-	GLboolean m = true;
+	GLboolean m = false;
 	GLboolean y = false;
+	GLboolean b = false;
+	GLboolean a = false;
 }
+GLboolean Brotate = false;
+GLboolean Mrotate = false;
+GLboolean Trotate = false;
+GLfloat delta_x = 0.0f;
+GLfloat mAngle = 0.0f;
+GLfloat tAngle = 0.0f;
 
-GLuint vao[4];
+GLuint vao[1];
 GLuint vbo_axes[2];
-GLuint vbo_sphere[3];
-GLuint vbo_color[3];
+
+GLuint vao_lowerBody;
+GLuint vbo_lowerBody[2];
+GLuint vao_upperBody;
+GLuint vbo_upperBody[2];
+GLuint vao_arm;
+GLuint vbo_arm[2];
 
 unsigned int modelLocation;
 unsigned int viewLocation;
 unsigned int projLocation;
 
 glm::mat4 camera;
+glm::vec3 camera_eye = {200.0f, 100.0f, 200.0f};
+GLfloat cameraAngle = 0.0f;
+GLfloat cameraRotateAngle = 0.0f;
+
 glm::mat4 projection;
 glm::mat4 view;
 
 axes_coordination axes;
 
-objRead bigSphere, standardSphere, smallSphere;
-GLint bigSphereSize = bigSphere.loadObj_normalize_center("BigSphere.obj");
-GLint standardSphereSize = standardSphere.loadObj_normalize_center("StandardSphere.obj");
-GLint smallSphereSize = smallSphere.loadObj_normalize_center("SmallSphere.obj");
-
-
-
-std::vector<GLfloat>bigCol =
-{
-};
-std::vector<GLfloat>standardCol =
-{
-};
-std::vector<GLfloat> smallCol =
-{
-};
-
-glm::mat4 transformationBigSphere = glm::mat4(1.0f);
-glm::mat4 transformationStdSphere[3] = { glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f) };
-glm::mat4 transformationSmallSphere[3] = { glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f) };
-
-GLfloat stdAngle[3] = { 0.0f, 0.0f, 0.0f };
-GLfloat smallAngle[3] = { 0.0f, 0.0f, 0.0f };
-GLfloat allAngle = 0.0f;
-
-glm::vec3 center[3];
-glm::vec3 delta;
-
-GLboolean startRotate = false;
+object lowerBody;
+object upperBody;
+object arm;
+glm::mat4 sec_arm = glm::mat4(1.0f);
 
 int main(int argc, char** argv)
 {
@@ -85,20 +75,347 @@ int main(int argc, char** argv)
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	for (auto& e : bigSphere.outvertex)
+	lowerBody.vertex =
 	{
-		bigCol.push_back(0.7f);
-		bigCol.push_back(0.7f);
-		bigCol.push_back(0.0f);
+		//앞면
+		
+			-100.0f, 0.0f, 100.0f,
+			100.0f, 50.0f, 100.0f,
+			-100.0f, 50.0f, 100.0f,
 
-		standardCol.push_back(0.0f);
-		standardCol.push_back(0.0f);
-		standardCol.push_back(0.7f);
+			-100.0f, 0.0f, 100.0f,
+			100.0f, 0.0f, 100.0f,
+			100.0f, 50.0f, 100.0f
+		,
+		//오른면
+		
+			100.0f, 0.0f, 100.0f,
+			100.0f, 50.0f, -100.0f,
+			100.0f, 50.0f, 100.0f,
 
-		smallCol.push_back(0.7f);
-		smallCol.push_back(0.4f);
-		smallCol.push_back(0.4f);
-	}
+			100.0f, 0.0f, 100.0f,
+			100.0f, 0.0f, -100.0f,
+			100.0f, 50.0f, -100.0f
+		,
+		//뒷면
+		
+			100.0f, 0.0f, -100.0f,
+			-100.0f, 0.0f, -100.0f,
+			-100.0f, 50.0f, -100.0f,
+
+			100.0f, 0.0f, -100.0f,
+			-100.0f, 50.0f, -100.0f,
+			100.0f, 50.0f, -100.0f
+		,
+		//왼면
+		
+			-100.0f, 0.0f, -100.0f,
+			-100.0f, 0.0f, 100.0f,
+			-100.0f, 50.0f, 100.0f,
+
+			-100.0f, 0.0f, -100.0f,
+			-100.0f, 50.0f, 100.0f,
+			-100.0f, 50.0f, -100.0f
+		,
+		//윗면
+		 
+			100.0f, 50.0f, 100.0f,
+			100.0f, 50.0f, -100.0f,
+			-100.0f, 50.0f, 100.0f,
+
+			-100.0f, 50.0f, 100.0f,
+			100.0f, 50.0f, -100.0f,
+			-100.0f, 50.0f, -100.0f
+		,
+		//뒷면
+		
+			100.0f, 0.0f, 100.0f,
+			-100.0f, 0.0f, 100.0f,
+			-100.0f, 0.0f, -100.0f,
+
+			100.0f, 0.0f, 100.0f,
+			-100.0f, 0.0f, -100.0f,
+			100.0f, 0.0f, -100.0f
+		
+	};
+	lowerBody.color =
+	{
+		
+			0.0f,0.0f,0.5f,
+			0.0f,0.0f,0.5f,
+			0.0f,0.0f,0.5f,
+			0.0f,0.0f,0.5f,
+			0.0f,0.0f,0.5f,
+			0.0f,0.0f,0.5f
+		,
+		
+			0.5f,0.0f,0.5f,
+			0.5f,0.0f,0.5f,
+			0.5f,0.0f,0.5f,
+			0.5f,0.0f,0.5f,
+			0.5f,0.0f,0.5f,
+			0.5f,0.0f,0.5f
+		,
+		
+			0.0f,0.5f,0.5f,
+			0.0f,0.5f,0.5f,
+			0.0f,0.5f,0.5f,
+			0.0f,0.5f,0.5f,
+			0.0f,0.5f,0.5f,
+			0.0f,0.5f,0.5f
+		,
+		
+			0.5f,0.3f,0.3f,
+			0.5f,0.3f,0.3f,
+			0.5f,0.3f,0.3f,
+			0.5f,0.3f,0.3f,
+			0.5f,0.3f,0.3f,
+			0.5f,0.3f,0.3f
+		,
+		
+			0.7f,0.7f,0.7f,
+			0.7f,0.7f,0.7f,
+			0.7f,0.7f,0.7f,
+			0.7f,0.7f,0.7f,
+			0.7f,0.7f,0.7f,
+			0.7f,0.7f,0.7f
+		,
+		
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f
+		
+	};
+	upperBody.vertex =
+	{
+		//앞면
+
+			-50.0f, 50.0f, 50.0f,
+			50.0f, 75.0f, 50.0f,
+			-50.0f, 75.0f, 50.0f,
+
+			-50.0f, 50.0f, 50.0f,
+			50.0f, 50.0f, 50.0f,
+			50.0f, 75.0f, 50.0f
+		,
+		//오른면
+
+			50.0f, 50.0f, 50.0f,
+			50.0f, 75.0f, -50.0f,
+			50.0f, 75.0f, 50.0f,
+
+			50.0f, 50.0f, 50.0f,
+			50.0f, 50.0f, -50.0f,
+			50.0f, 75.0f, -50.0f
+		,
+		//뒷면
+
+			50.0f, 50.0f, -50.0f,
+			-50.0f, 50.0f, -50.0f,
+			-50.0f, 75.0f, -50.0f,
+
+			50.0f, 50.0f, -50.0f,
+			-50.0f, 75.0f, -50.0f,
+			50.0f, 75.0f, -50.0f
+		,
+		//왼면
+
+			-50.0f, 50.0f, -50.0f,
+			-50.0f, 50.0f, 50.0f,
+			-50.0f, 75.0f, 50.0f,
+
+			-50.0f, 50.0f, -50.0f,
+			-50.0f, 75.0f, 50.0f,
+			-50.0f, 75.0f, -50.0f
+		,
+		//윗면
+
+			50.0f, 75.0f, 50.0f,
+			50.0f, 75.0f, -50.0f,
+			-50.0f, 75.0f, 50.0f,
+
+			-50.0f, 75.0f, 50.0f,
+			50.0f, 75.0f, -50.0f,
+			-50.0f, 75.0f, -50.0f
+		,
+		//뒷면
+
+			50.0f, 50.0f, 50.0f,
+			-50.0f, 50.0f, 50.0f,
+			-50.0f, 50.0f, -50.0f,
+
+			50.0f, 50.0f, 50.0f,
+			-50.0f, 50.0f, -50.0f,
+			50.0f, 50.0f, -50.0f
+
+	};
+	upperBody.color =
+	{
+
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f
+		,
+
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f
+		,
+
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f
+		,
+
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f
+		,
+
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f
+		,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f
+	};
+
+	arm.vertex =
+	{
+		//앞면
+
+			-15.0f, 0.0f, 15.0f,
+			15.0f, 70.0f, 15.0f,
+			-15.0f, 70.0f, 15.0f,
+
+			-15.0f, 0.0f, 15.0f,
+			15.0f, 0.0f, 15.0f,
+			15.0f, 70.0f, 15.0f
+		,
+		//오른면
+
+			15.0f, 0.0f, 15.0f,
+			15.0f, 70.0f, -15.0f,
+			15.0f, 70.0f, 15.0f,
+
+			15.0f, 0.0f, 15.0f,
+			15.0f, 0.0f, -15.0f,
+			15.0f, 70.0f, -15.0f
+		,
+		//뒷면
+
+			15.0f, 0.0f, -15.0f,
+			-15.0f, 0.0f, -15.0f,
+			-15.0f, 70.0f, -15.0f,
+
+			15.0f, 0.0f, -15.0f,
+			-15.0f, 70.0f, -15.0f,
+			15.0f, 70.0f, -15.0f
+		,
+		//왼면
+
+			-15.0f, 0.0f, -15.0f,
+			-15.0f, 0.0f, 15.0f,
+			-15.0f, 70.0f, 15.0f,
+
+			-15.0f, 0.0f, -15.0f,
+			-15.0f, 70.0f, 15.0f,
+			-15.0f, 70.0f, -15.0f
+		,
+		//윗면
+
+			15.0f, 70.0f, 15.0f,
+			15.0f, 70.0f, -15.0f,
+			-15.0f, 70.0f, 15.0f,
+
+			-15.0f, 70.0f, 15.0f,
+			15.0f, 70.0f, -15.0f,
+			-15.0f, 70.0f, -15.0f
+		,
+		//뒷면
+
+			15.0f, 0.0f, 15.0f,
+			-15.0f, 0.0f, 15.0f,
+			-15.0f, 0.0f, -15.0f,
+
+			15.0f, 0.0f, 15.0f,
+			-15.0f, 0.0f, -15.0f,
+			15.0f, 0.0f, -15.0f
+
+	};
+
+
+	arm.color =
+	{
+
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f,
+			0.0f,0.0f,0.0f
+		,
+
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f,
+			1.0f,0.5f,0.0f
+		,
+
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f,
+			0.0f,0.5f,1.0f
+		,
+
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f,
+			0.5f,0.3f,0.5f
+		,
+
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f,
+			0.4f,0.4f,0.4f
+		,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f,
+			0.5f,0.5f,0.0f
+	};
 
 	//세이더 읽어와서 세이더 프로그램 만들기
 
@@ -111,7 +428,7 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(KeyEvent);
 
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
@@ -119,27 +436,16 @@ int main(int argc, char** argv)
 	projLocation = glGetUniformLocation(shaderID, "projectionTransform");
 
 
-	//camera = glm::lookAt(glm::vec3(200.0f, 100.0f, 200.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
-	//camera = glm::lookAt(glm::vec3(0.0f, -300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
-	camera = glm::lookAt(glm::vec3(0.0f, 0.0f, 300.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
+	camera = glm::lookAt(glm::vec3(0.0f, -300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
+	//camera = glm::lookAt(glm::vec3(0.0f, 0.0f, 300.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	
 
 	projection = glm::mat4(1.0f);
 	//근평면은 포함이고 원평면은 포함X
 	projection = glm::ortho(-300.0f, 300.0f, -300.0f, 300.0f, 50.0f, 600.0f);
-	//projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 400.0f);
+	//projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);
 	//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0));
-
-	transformationStdSphere[0] = glm::rotate(transformationStdSphere[0], glm::radians(stdAngle[0]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[0] = glm::translate(transformationStdSphere[0], glm::vec3(-100.0f, 0.0f, 100.0f));
-
-	transformationStdSphere[1] = glm::rotate(transformationStdSphere[1], glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	transformationStdSphere[1] = glm::rotate(transformationStdSphere[1], glm::radians(stdAngle[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[1] = glm::translate(transformationStdSphere[1], glm::vec3(170.0f, 0.0f, 170.0f));
-
-	transformationStdSphere[2] = glm::rotate(transformationStdSphere[2], glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	transformationStdSphere[2] = glm::rotate(transformationStdSphere[2], glm::radians(stdAngle[2]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[2] = glm::translate(transformationStdSphere[2], glm::vec3(200.0f, 0.0f, 200.0f));
 
 	glutMainLoop();
 }
@@ -163,30 +469,27 @@ GLvoid drawScene()
 	
 	//좌표축 그리기
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(axes.transformations));
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(axes.transformation));
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_LINES, 0, 6);
 
-	//중심원(큰원)
-	glBindVertexArray(vao[1]);
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformationBigSphere));
-	glDrawArrays(GL_TRIANGLES, 0, bigSphereSize);
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(lowerBody.transformation));
+	glBindVertexArray(vao_lowerBody);
+	glDrawArrays(GL_TRIANGLES, 0, lowerBody.getSize());
 
-	//중간원
-	glBindVertexArray(vao[2]);
-	for (int i = 0; i < 3; ++i)
-	{
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformationStdSphere[i]));
-		glDrawArrays(GL_TRIANGLES, 0, standardSphereSize);
-	}
-	
-	//작은원
-	glBindVertexArray(vao[3]);
-	for (int i = 0; i < 3; ++i)
-	{
-		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformationSmallSphere[i]));
-		glDrawArrays(GL_TRIANGLES, 0, smallSphereSize);
-	}
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(upperBody.transformation));
+	glBindVertexArray(vao_upperBody);
+	glDrawArrays(GL_TRIANGLES, 0, upperBody.getSize());
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(arm.transformation));
+	glBindVertexArray(vao_arm);
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
+
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sec_arm));
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
 
 	glutSwapBuffers();
 }
@@ -199,84 +502,57 @@ GLvoid Reshape(int w, int h)
 
 GLvoid TimeEvent(int value)
 {
-	transformationBigSphere = glm::mat4(1.0f);
+	camera = glm::mat4(1.0f);
+	camera = glm::lookAt(camera_eye, glm::vec3(camera_eye.x - 200.0f, 0.0f, camera_eye.z - 200.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	transformationStdSphere[0] = glm::mat4(1.0f);
-	transformationStdSphere[1] = glm::mat4(1.0f);
-	transformationStdSphere[2] = glm::mat4(1.0f);
+	if (keyState::a)
+		cameraRotateAngle += 10.0f;
 
-	transformationSmallSphere[0] = glm::mat4(1.0f);
-	transformationSmallSphere[1] = glm::mat4(1.0f);
-	transformationSmallSphere[2] = glm::mat4(1.0f);
+	camera = glm::rotate(camera, glm::radians(cameraRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	camera = glm::translate(camera, camera_eye);
+	camera = glm::rotate(camera, glm::radians(cameraAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	camera = glm::translate(camera, -camera_eye);
 
+	sec_arm = glm::mat4(1.0f);
+	arm.transformation = glm::mat4(1.0f);
+	lowerBody.transformation = glm::mat4(1.0f);
+	upperBody.transformation = glm::mat4(1.0f);
 
-	if (keyState::y && startRotate)
-		allAngle += 10.0f;
-	else if(startRotate && !keyState::y)
-		allAngle -= 10.0f;
+	lowerBody.transformation = glm::translate(lowerBody.transformation, glm::vec3(delta_x, 0.0f, 0.0f));
+	upperBody.transformation = glm::translate(upperBody.transformation, glm::vec3(delta_x, 0.0f, 0.0f));
+	arm.transformation = glm::translate(arm.transformation, glm::vec3(delta_x, 0.0f, 0.0f));
+	sec_arm = glm::translate(sec_arm, glm::vec3(delta_x, 0.0f, 0.0f));
 
-	stdAngle[0] = stdAngle[0] + 8.0f;
-	stdAngle[1] = stdAngle[1] + 10.0f;
-	stdAngle[2] = stdAngle[2] + 5.0f;
+	upperBody.transformation = glm::rotate(upperBody.transformation, glm::radians(mAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	arm.transformation = glm::rotate(arm.transformation, glm::radians(mAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	sec_arm = glm::rotate(sec_arm, glm::radians(mAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	smallAngle[0] = smallAngle[0] + 17.0f;
-	smallAngle[1] = smallAngle[1] + 17.0f;
-	smallAngle[2] = smallAngle[2] + 17.0f;
-
-	if (startRotate)
+	if (keyState::m)
 	{
-		transformationBigSphere = glm::rotate(transformationBigSphere, glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-		for (int i = 0; i < 3; ++i)
-		{
-			transformationStdSphere[i] = glm::rotate(transformationStdSphere[i], glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-			transformationSmallSphere[i] = glm::rotate(transformationSmallSphere[i], glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-		}
+		if (Mrotate)
+			mAngle += 10.0f;
+		else
+			mAngle -= 10.0f;
 	}
 
-
-	transformationBigSphere = glm::translate(transformationBigSphere, delta);
-	for (int i = 0; i < 3; ++i)
+	if (keyState::t)
 	{
-		transformationStdSphere[i] = glm::translate(transformationStdSphere[i], delta);
-		transformationSmallSphere[i] = glm::translate(transformationSmallSphere[i], delta);
+		if (Trotate)
+			tAngle += 10.0f;
+		else
+			tAngle -= 10.0f;
+
+		if (tAngle >= 90.0f && Trotate)
+			Trotate = false;
+		else if (tAngle <= -90.0f && !Trotate)
+			Trotate = true;
 	}
 
-	transformationStdSphere[0] = glm::rotate(transformationStdSphere[0], glm::radians(stdAngle[0]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[0] = glm::translate(transformationStdSphere[0], glm::vec3(0.0f, 0.0f, 140.0f));
-
-	transformationStdSphere[1] = glm::rotate(transformationStdSphere[1], glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	transformationStdSphere[1] = glm::rotate(transformationStdSphere[1], glm::radians(stdAngle[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[1] = glm::translate(transformationStdSphere[1], glm::vec3(200.0f, 0.0f, 0.0f));
-
-	transformationStdSphere[2] = glm::rotate(transformationStdSphere[2], glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	transformationStdSphere[2] = glm::rotate(transformationStdSphere[2], glm::radians(stdAngle[2]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationStdSphere[2] = glm::translate(transformationStdSphere[2], glm::vec3(200.0f, 0.0f, 0.0f));
-
-
-	center[0].x = glm::sin(glm::radians(stdAngle[0])) * 140.0f;
-	center[0].y = 0.0f;
-	center[0].z = glm::cos(glm::radians(stdAngle[0])) * 140.0f;
-
-	transformationSmallSphere[0] = glm::translate(transformationSmallSphere[0], center[0]);
-	transformationSmallSphere[0] = glm::rotate(transformationSmallSphere[0], glm::radians(smallAngle[0]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationSmallSphere[0] = glm::translate(transformationSmallSphere[0], glm::vec3(50.0f, 0.0f, 0.0f));
+	arm.transformation = glm::translate(arm.transformation, glm::vec3(0.0f, 75.0f, 20.0f));
+	sec_arm = glm::translate(sec_arm, glm::vec3(0.0f, 75.0f, -20.0f));
 	
-	center[1].x = glm::cos(glm::radians(45.0f)) * glm::cos(glm::radians(-stdAngle[1])) * 200.0f;
-	center[1].y = glm::sin(glm::radians(45.0f)) * glm::cos(glm::radians(-stdAngle[1])) * 200.0f;
-	center[1].z = glm::sin(glm::radians(-stdAngle[1])) * 200.0f;
-
-	transformationSmallSphere[1] = glm::translate(transformationSmallSphere[1], center[1]);
-	transformationSmallSphere[1] = glm::rotate(transformationSmallSphere[1], glm::radians(smallAngle[1]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationSmallSphere[1] = glm::translate(transformationSmallSphere[1], glm::vec3(0.0f, 0.0f, -50.0f));
-	
-	center[2].x = glm::cos(glm::radians(-45.0f)) * glm::cos(glm::radians(-stdAngle[2])) * 200.0f;
-	center[2].y = glm::sin(glm::radians(-45.0f)) * glm::cos(glm::radians(-stdAngle[2])) * 200.0f;
-	center[2].z = glm::sin(glm::radians(-stdAngle[2])) * 200.0f;
-
-	transformationSmallSphere[2] = glm::translate(transformationSmallSphere[2], center[2]);
-	transformationSmallSphere[2] = glm::rotate(transformationSmallSphere[2], glm::radians(smallAngle[2]), glm::vec3(0.0f, 1.0f, 0.0f));
-	transformationSmallSphere[2] = glm::translate(transformationSmallSphere[2], glm::vec3(0.0f, 0.0f, -50.0f));
-
+	arm.transformation = glm::rotate(arm.transformation, glm::radians(-tAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	sec_arm = glm::rotate(sec_arm, glm::radians(tAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -286,63 +562,97 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 {
 	if (key == 'q')
 		glutExit();
-	else if (key == 'p')
+	else if (key == 'b')
 	{
-		keyState::p = keyState::p ? false : true;
-		projection = glm::mat4(1.0f);
-		
-		if(keyState::p)
-			projection = glm::ortho(-300.0f, 300.0f, -300.0f, 300.0f, 50.0f, 600.0f);
-		else
-			projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);	
+		delta_x += 10.0f;
+	}
+	else if (key == 'B')
+	{
+		delta_x -= 10.0f;
 	}
 	else if (key == 'm')
 	{
+		keyState::m = true;
+		Mrotate = Mrotate ? false : true;
+	}
+	else if (key == 'M')
+	{
 		keyState::m = keyState::m ? false : true;
-
-		if(keyState::m)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		else 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
-	else if (key == 'w')
+	else if (key == 't')
 	{
-		delta.y += 5.0f;
+		keyState::t = true;
+		Trotate = Trotate ? false : true;
 	}
-	else if (key == 's')
+	else if (key == 'T')
 	{
-		delta.y -= 5.0f;
-	}
-	else if (key == 'a')
-	{
-		delta.x -= 5.0f;
-	}
-	else if (key == 'd')
-	{
-		delta.x += 5.0f;
+		keyState::t = keyState::t ? false : true;
 	}
 	else if (key == 'z')
 	{
-		delta.z += 5.0f;
+		camera_eye.z += 10.0f;
+	}
+	else if (key == 'Z')
+	{
+		camera_eye.z -= 10.0f;
 	}
 	else if (key == 'x')
 	{
-		delta.z -= 5.0f;
+		camera_eye.x += 10.0f;
+	}
+	else if (key == 'X')
+	{
+		camera_eye.x -= 10.0f;
 	}
 	else if (key == 'y')
 	{
-		keyState::y = keyState::y ? false : true;
-		startRotate = true;
+		cameraAngle += 10.0f;
+	}
+	else if (key == 'Y')
+	{
+		cameraAngle -= 10.0f;
+	}
+	else if (key == 'r')
+	{
+		cameraRotateAngle += 10.0f;
+	}
+	else if (key == 'R')
+	{
+		cameraRotateAngle -= 10.0f;
+	}
+	else if (key == 'a')
+	{
+		keyState::a = keyState::a ? false : true;
+	}
+	else if (key == 's')
+	{
+		//keyState::t = false;
+		keyState::t = false;
+		keyState::m = false;
+		keyState::a = false;
+	}
+	else if (key == 'c')
+	{
+		keyState::t = false;
+		keyState::m = false;
+		keyState::a = false;
+		Brotate = false;
+		Mrotate = false;
+		Trotate = false;
+		delta_x = 0.0f;
+		mAngle = 0.0f;
+		tAngle = 0.0f;
+		camera_eye = { 200.0f, 100.0f, 200.0f };
+		cameraAngle = 0.0f;
+		cameraRotateAngle = 0.0f;
 	}
 }
 
 
 void initBuffer()
 {
-	glGenVertexArrays(4, vao);
+	glGenVertexArrays(1, vao);
 	glGenBuffers(2, vbo_axes);
-	glGenBuffers(3, vbo_sphere);
-	glGenBuffers(3, vbo_color);
 
 	glBindVertexArray(vao[0]);
 
@@ -357,39 +667,48 @@ void initBuffer()
 	glEnableVertexAttribArray(0);
 
 
-	glBindVertexArray(vao[1]);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_color[0]);
-	glBufferData(GL_ARRAY_BUFFER, bigCol.size() * sizeof(GLfloat), bigCol.data(), GL_STATIC_DRAW);
+	glGenVertexArrays(1, &vao_lowerBody);
+	glGenBuffers(2, vbo_lowerBody);
+
+	glBindVertexArray(vao_lowerBody);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_lowerBody[1]);
+	glBufferData(GL_ARRAY_BUFFER, lowerBody.color.size() * sizeof(GLfloat), lowerBody.color.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere[0]);
-	glBufferData(GL_ARRAY_BUFFER, bigSphere.outvertex.size() * sizeof(glm::vec3), bigSphere.outvertex.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_lowerBody[0]);
+	glBufferData(GL_ARRAY_BUFFER, lowerBody.vertex.size() * sizeof(GLfloat), lowerBody.vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindVertexArray(vao[2]);
+	glGenVertexArrays(1, &vao_upperBody);
+	glGenBuffers(2, vbo_upperBody);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_color[1]);
-	glBufferData(GL_ARRAY_BUFFER, standardCol.size() * sizeof(GLfloat), standardCol.data(), GL_STATIC_DRAW);
+	glBindVertexArray(vao_upperBody);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_upperBody[1]);
+	glBufferData(GL_ARRAY_BUFFER, upperBody.color.size() * sizeof(GLfloat), upperBody.color.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere[1]);
-	glBufferData(GL_ARRAY_BUFFER, standardSphere.outvertex.size() * sizeof(glm::vec3), standardSphere.outvertex.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_upperBody[0]);
+	glBufferData(GL_ARRAY_BUFFER, upperBody.vertex.size() * sizeof(GLfloat), upperBody.vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	glBindVertexArray(vao[3]);
+	glGenVertexArrays(1, &vao_arm);
+	glGenBuffers(2, vbo_arm);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_color[2]);
-	glBufferData(GL_ARRAY_BUFFER, smallCol.size() * sizeof(GLfloat), smallCol.data(), GL_STATIC_DRAW);
+	glBindVertexArray(vao_arm);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_arm[1]);
+	glBufferData(GL_ARRAY_BUFFER, arm.color.size() * sizeof(GLfloat), arm.color.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere[2]);
-	glBufferData(GL_ARRAY_BUFFER, smallSphere.outvertex.size() * sizeof(glm::vec3), smallSphere.outvertex.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_arm[0]);
+	glBufferData(GL_ARRAY_BUFFER, arm.vertex.size() * sizeof(GLfloat), arm.vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 }

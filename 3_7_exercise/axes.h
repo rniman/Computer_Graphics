@@ -4,7 +4,7 @@
 
 struct axes_coordination
 {
-	glm::mat4 transformations = glm::mat4(1.0f);
+	glm::mat4 transformation = glm::mat4(1.0f);
 
 	std::vector<GLfloat> axes_vertex =
 	{

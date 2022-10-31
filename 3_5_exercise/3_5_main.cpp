@@ -51,13 +51,6 @@ GLboolean openSide = true;
 GLfloat tetraAngle = 0.0f;
 GLboolean openTetra = true;
 
-class polygon
-{
-public:
-	std::vector<GLfloat> vertex;
-	std::vector<GLfloat> color;
-};
-
 std::vector<std::vector<GLfloat>> hexa_plane =
 {
 	{
