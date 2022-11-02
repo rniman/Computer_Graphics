@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(300, 50);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_3_5(16¹ø)");
+	glutCreateWindow("Example_3_6(17¹ø)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();

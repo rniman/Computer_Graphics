@@ -25,6 +25,7 @@ namespace keyState
 	GLboolean g = false;
 	GLboolean o = false;
 	GLboolean p = false;
+	GLboolean y = false;
 }
 
 GLuint vao[12];
@@ -42,6 +43,9 @@ glm::mat4 view;
 axes_coordination axes;
 glm::mat4 hexa_trasformation[6];
 glm::mat4 tetra_transformation[5];
+
+GLfloat angle = 0.0f;
+GLfloat tAngle = 0.0f;
 
 GLfloat frontAngle = 0.0f;
 GLboolean openFront = true;
@@ -346,22 +350,28 @@ GLvoid Reshape(int w, int h)
 
 GLvoid TimeEvent(int value)
 {
+	for (int i = 0; i < 6; ++i)
+		hexa_trasformation[i] = glm::mat4(1.0f);
+
+	for (int i = 0; i < 5; ++i)
+		tetra_transformation[i] = glm::mat4(1.0f);
+
 	if (keyState::t)
 	{
-		hexa_trasformation[4] = glm::rotate(hexa_trasformation[4], glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		tAngle += 10.0f;
 	}
+	hexa_trasformation[4] = glm::rotate(hexa_trasformation[4], glm::radians(tAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
 
 	if (keyState::f)
 	{
-		hexa_trasformation[1] = glm::mat4(1.0f);
+		//hexa_trasformation[1] = glm::mat4(1.0f);
 		if (openFront)
 			frontAngle -= 5.0f;
 		else
 			frontAngle += 5.0f;
 
-		hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(100.0f, -100.0f, 0.0f));
-		hexa_trasformation[1] = glm::rotate(hexa_trasformation[1], glm::radians(frontAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-		hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(-100.0f, 100.0f, 0.0f));
+
 
 		if (frontAngle <= -90.0f && openFront)
 		{
@@ -377,8 +387,8 @@ GLvoid TimeEvent(int value)
 
 	if (keyState::g)
 	{
-		hexa_trasformation[0] = glm::mat4(1.0f);
-		hexa_trasformation[2] = glm::mat4(1.0f);
+		//hexa_trasformation[0] = glm::mat4(1.0f);
+		//hexa_trasformation[2] = glm::mat4(1.0f);
 
 		if (openSide)
 			sideMove += 10.0f;
@@ -402,29 +412,14 @@ GLvoid TimeEvent(int value)
 
 	if (keyState::o)
 	{
-		for (int i = 0; i < 4; ++i)
-			tetra_transformation[i + 1] = glm::mat4(1.0f);
+		//for (int i = 0; i < 4; ++i)
+		//	tetra_transformation[i + 1] = glm::mat4(1.0f);
 
 		if (openTetra)
 			tetraAngle += 10.0f;
 		else
 			tetraAngle -= 10.0f;
 
-		tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(100.0f, 0.0f, 0.0f));
-		tetra_transformation[1] = glm::rotate(tetra_transformation[1], glm::radians(-tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-		tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(-100.0f, 0.0f, 0.0f));
-
-		tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(-100.0f, 0.0f, 0.0f));
-		tetra_transformation[2] = glm::rotate(tetra_transformation[2], glm::radians(tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-		tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(100.0f, 0.0f, 0.0f));
-
-		tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, -100.0f));
-		tetra_transformation[3] = glm::rotate(tetra_transformation[3], glm::radians(-tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-		tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, 100.0f));
-
-		tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, 100.0f));
-		tetra_transformation[4] = glm::rotate(tetra_transformation[4], glm::radians(tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
-		tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, -100.0f));
 
 		if (tetraAngle >= 270.0f && openTetra)
 		{
@@ -437,6 +432,38 @@ GLvoid TimeEvent(int value)
 			openTetra = true;
 		}
 	}
+
+
+	if (keyState::y)
+	{
+		angle += 5.0f;
+	}
+	for (int i = 0; i < 6; ++i)
+		hexa_trasformation[i] = glm::rotate(hexa_trasformation[i], glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(100.0f, -100.0f, 0.0f));
+	hexa_trasformation[1] = glm::rotate(hexa_trasformation[1], glm::radians(frontAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	hexa_trasformation[1] = glm::translate(hexa_trasformation[1], glm::vec3(-100.0f, 100.0f, 0.0f));
+
+
+	for (int i = 0; i < 5; ++i)
+		tetra_transformation[i] = glm::rotate(tetra_transformation[i], glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(100.0f, 0.0f, 0.0f));
+	tetra_transformation[1] = glm::rotate(tetra_transformation[1], glm::radians(-tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	tetra_transformation[1] = glm::translate(tetra_transformation[1], glm::vec3(-100.0f, 0.0f, 0.0f));
+
+	tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(-100.0f, 0.0f, 0.0f));
+	tetra_transformation[2] = glm::rotate(tetra_transformation[2], glm::radians(tetraAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+	tetra_transformation[2] = glm::translate(tetra_transformation[2], glm::vec3(100.0f, 0.0f, 0.0f));
+
+	tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, -100.0f));
+	tetra_transformation[3] = glm::rotate(tetra_transformation[3], glm::radians(-tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+	tetra_transformation[3] = glm::translate(tetra_transformation[3], glm::vec3(0.0f, 0.0f, 100.0f));
+
+	tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, 100.0f));
+	tetra_transformation[4] = glm::rotate(tetra_transformation[4], glm::radians(tetraAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+	tetra_transformation[4] = glm::translate(tetra_transformation[4], glm::vec3(0.0f, 0.0f, -100.0f));
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -460,6 +487,10 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 			glDisable(GL_DEPTH_TEST);
 			//glDisable(GL_CULL_FACE);
 		}
+	}
+	else if (key == 'y')
+	{
+		keyState::y = keyState::y ? false : true;
 	}
 	else if (key == 't' && hexa)
 	{

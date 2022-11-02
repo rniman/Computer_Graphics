@@ -49,7 +49,7 @@ unsigned int modelLocation;
 unsigned int viewLocation;
 unsigned int projLocation;
 
-glm::mat4 camera;
+glm::mat4 camera, camera2, camera3;
 glm::vec3 camera_eye = {200.0f, 100.0f, 200.0f};
 GLfloat cameraAngle = 0.0f;
 GLfloat cameraRotateAngle = 0.0f;
@@ -66,11 +66,13 @@ glm::mat4 sec_arm = glm::mat4(1.0f);
 
 int main(int argc, char** argv)
 {
+	
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(300, 50);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_3_5(16번)");
+	glutCreateWindow("Example_3_7(18번)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -443,8 +445,8 @@ int main(int argc, char** argv)
 
 	projection = glm::mat4(1.0f);
 	//근평면은 포함이고 원평면은 포함X
-	projection = glm::ortho(-300.0f, 300.0f, -300.0f, 300.0f, 50.0f, 600.0f);
-	//projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);
+	//projection = glm::ortho(-300.0f, 300.0f, -300.0f, 300.0f, 50.0f, 600.0f);
+	projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);
 	//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0));
 
 	glutMainLoop();
@@ -453,9 +455,10 @@ int main(int argc, char** argv)
 
 GLvoid drawScene()
 {
-
 	glClearColor(rColor, gColor, bColor, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glViewport(0, 0, 400, 400);
 
 	//랜더링 파이프라인에 세이더 불러오기
 	
@@ -467,6 +470,69 @@ GLvoid drawScene()
 	//투영 변환 적용
 	glUniformMatrix4fv(projLocation, 1, GL_FALSE, glm::value_ptr(projection));
 	
+	//좌표축 그리기
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(axes.transformation));
+	glBindVertexArray(vao[0]);
+	glDrawArrays(GL_LINES, 0, 6);
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(lowerBody.transformation));
+	glBindVertexArray(vao_lowerBody);
+	glDrawArrays(GL_TRIANGLES, 0, lowerBody.getSize());
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(upperBody.transformation));
+	glBindVertexArray(vao_upperBody);
+	glDrawArrays(GL_TRIANGLES, 0, upperBody.getSize());
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(arm.transformation));
+	glBindVertexArray(vao_arm);
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
+
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sec_arm));
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
+
+
+	glViewport(400, 50, 200, 200);
+
+	camera2 = glm::mat4(1.0f);
+	camera2 = glm::lookAt(glm::vec3(0.0f, 300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
+
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(camera2));
+
+	//좌표축 그리기
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(axes.transformation));
+	glBindVertexArray(vao[0]);
+	glDrawArrays(GL_LINES, 0, 6);
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(lowerBody.transformation));
+	glBindVertexArray(vao_lowerBody);
+	glDrawArrays(GL_TRIANGLES, 0, lowerBody.getSize());
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(upperBody.transformation));
+	glBindVertexArray(vao_upperBody);
+	glDrawArrays(GL_TRIANGLES, 0, upperBody.getSize());
+
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(arm.transformation));
+	glBindVertexArray(vao_arm);
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
+
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sec_arm));
+	glDrawArrays(GL_TRIANGLES, 0, arm.getSize());
+
+	glViewport(400, 350, 200, 200);
+
+	camera3 = glm::mat4(1.0f);
+	camera3 = glm::lookAt(glm::vec3(0.0f, 0.0f, 300.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(camera3));
+
 	//좌표축 그리기
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
 	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(axes.transformation));
