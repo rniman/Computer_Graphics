@@ -1,10 +1,15 @@
 #pragma once
-#include "make_Shader.h"
-#include <vector>
+#include "cuboid.h"
+#include "block.h"
+
+GLvoid makeHexa(std::vector<GLfloat>& obj, const GLfloat& width, const GLfloat& hegiht);
+GLvoid setCol(std::vector<GLfloat>& col, const GLfloat& red, const GLfloat& green, const GLfloat& blue);
 
 class robot
 {
 public:
+	glm::vec3 pos;
+
 	GLuint vao_body;
 	GLuint vao_head;
 	GLuint vao_arm;
@@ -31,151 +36,74 @@ public:
 
 	glm::mat4 bodyTrans = glm::mat4(1.0f);
 	glm::mat4 headTrans = glm::mat4(1.0f);
-	glm::mat4 legTrans = glm::mat4(1.0f);
-	glm::mat4 armTrans = glm::mat4(1.0f);
+	glm::mat4 leftLegTrans = glm::mat4(1.0f);
+	glm::mat4 rightLegTrans = glm::mat4(1.0f);
+	glm::mat4 leftArmTrans = glm::mat4(1.0f);
+	glm::mat4 rightArmTrans = glm::mat4(1.0f);
 	glm::mat4 noseTrans = glm::mat4(1.0f);
 
+	GLint Xdir, Zdir;
+	GLfloat look;
+	
+	GLboolean swing;
+	GLfloat swingLeg;
+	GLfloat swingArm;
 
+	GLboolean jumpState;
+	GLboolean fallDown;
+	GLfloat jumpHeight;
 	robot()
 	{
-		body =
-		{
-			//¾Õ¸é
-				-30.0f, -30.0f, 30.0f,
-				30.0f, 30.0f, 30.0f,
-				-30.0f, 30.0f, 30.0f,
+		pos = glm::vec3(0.0f, -130.0f, 0.0f);
 
-				-30.0f, -30.0f, 30.0f,
-				30.0f, -30.0f, 30.0f,
-				30.0f, 30.0f, 30.0f
-			,
-			//¿À¸¥¸é
-				30.0f, -30.0f, 30.0f,
-				30.0f, 30.0f, -30.0f,
-				30.0f, 30.0f, 30.0f,
+		makeCuboid(body, 30.0f, 30.0f);
+		makeCuboid(head, 15.0f, 15.0f);
+		makeCuboid(arm, 10.0f, 20.0f);
+		makeCuboid(leg, 10.0f, 40.0f);
+		makeCuboid(nose, 5.0f, 5.0f);
+		
+		setCol(body_color, 0.0f, 0.0f, 0.0f);
+		setCol(head_color, 0.7f, 0.7f, 0.7f);
+		setCol(arm_color, 0.0f, 0.5f, 0.5f);
+		setCol(leg_color, 1.0f, 0.5f, 0.0f);
+		setCol(nose_color, 0.0f, 1.0f, 0.0f);
 
-				30.0f, -30.0f, 30.0f,
-				30.0f, -30.0f, -30.0f,
-				30.0f, 30.0f, -30.0f
-			,
-			//µÞ¸é
-				30.0f, -30.0f, -30.0f,
-				-30.0f, -30.0f, -30.0f,
-				-30.0f, 30.0f, -30.0f,
+		Xdir = 0;
+		Zdir = 0;
+		look = 90.0f;
 
-				30.0f, -30.0f, -30.0f,
-				-30.0f, 30.0f, -30.0f,
-				30.0f, 30.0f, -30.0f
-			,
-			//¿Þ¸é
-				-30.0f, -30.0f, -30.0f,
-				-30.0f, -30.0f, 30.0f,
-				-30.0f, 30.0f, 30.0f,
+		swing = true;
+		swingArm = 0.0f;
+		swingLeg = 0.0f;
 
-				-30.0f, -30.0f, -30.0f,
-				-30.0f, 30.0f, 30.0f,
-				-30.0f, 30.0f, -30.0f
-			,
-			//À­¸é
-				30.0f, 30.0f, 30.0f,
-				30.0f, 30.0f, -30.0f,
-				-30.0f, 30.0f, 30.0f,
-
-				-30.0f, 30.0f, 30.0f,
-				30.0f, 30.0f, -30.0f,
-				-30.0f, 30.0f, -30.0f
-			,
-			//µÞ¸é
-				30.0f, -30.0f, 30.0f,
-				-30.0f, -30.0f, 30.0f,
-				-30.0f, -30.0f, -30.0f,
-
-				30.0f, -30.0f, 30.0f,
-				-30.0f, -30.0f, -30.0f,
-				30.0f, -30.0f, -30.0f
-		};
-
-		head =
-		{
-			//¾Õ¸é
-				-15.0f, -15.0f, 15.0f,
-				15.0f, 15.0f, 15.0f,
-				-15.0f, 15.0f, 15.0f,
-
-				-15.0f, -15.0f, 15.0f,
-				15.0f, -15.0f, 15.0f,
-				15.0f, 15.0f, 15.0f
-			,
-			//¿À¸¥¸é
-				15.0f, -15.0f, 15.0f,
-				15.0f, 15.0f, -15.0f,
-				15.0f, 15.0f, 15.0f,
-
-				15.0f, -15.0f, 15.0f,
-				15.0f, -15.0f, -15.0f,
-				15.0f, 15.0f, -15.0f
-			,
-			//µÞ¸é
-				15.0f, -15.0f, -15.0f,
-				-15.0f, -15.0f, -15.0f,
-				-15.0f, 15.0f, -15.0f,
-
-				15.0f, -15.0f, -15.0f,
-				-15.0f, 15.0f, -15.0f,
-				15.0f, 15.0f, -15.0f
-			,
-			//¿Þ¸é
-				-15.0f, -15.0f, -15.0f,
-				-15.0f, -15.0f, 15.0f,
-				-15.0f, 15.0f, 15.0f,
-
-				-15.0f, -15.0f, -15.0f,
-				-15.0f, 15.0f, 15.0f,
-				-15.0f, 15.0f, -15.0f
-			,
-			//À­¸é
-				15.0f, 15.0f, 15.0f,
-				15.0f, 15.0f, -15.0f,
-				-15.0f, 15.0f, 15.0f,
-
-				-15.0f, 15.0f, 15.0f,
-				15.0f, 15.0f, -15.0f,
-				-15.0f, 15.0f, -15.0f
-			,
-			//µÞ¸é
-				15.0f, -15.0f, 15.0f,
-				-15.0f, -15.0f, 15.0f,
-				-15.0f, -15.0f, -15.0f,
-
-				15.0f, -15.0f, 15.0f,
-				-15.0f, -15.0f, -15.0f,
-				15.0f, -15.0f, -15.0f
-		};
-
-		arm =
-		{
-
-		};
-
-		leg =
-		{
-
-		};
-
-		nose =
-		{
-
-		};
-
+		jumpState = false;
+		fallDown = false;
+		jumpHeight = 0.0f;
 	}
 
-	GLvoid initBuffer(GLuint& vao, GLuint vbo[], std::vector<GLfloat>& vertex, std::vector<GLfloat>& color);
 	GLvoid init();
-	GLvoid DrawRobot(GLuint& vao, GLuint vbo[], std::vector<GLfloat>& vertex, glm::mat4& transformation, unsigned int& modelLocation);
 	GLvoid Draw(unsigned int& modelLocation);
+	GLvoid initMatrix();
+	GLvoid initRobotModel();
+	GLvoid posModel(const glm::vec3& vector);
+	GLvoid lookModel();
+	GLvoid swingModel();
+	GLvoid changeLook();
+	GLvoid move(const block& bl);
+	GLvoid swingRobot();
+	GLvoid telepotePos();
+	GLvoid jumpRobot(const block& bl);
+	GLvoid jump();
+	
+	//friend GLboolean checkFloor(const robot& rb, const block);
+	friend GLboolean outStage(const robot& rb);
+	friend GLboolean checkBlock(const block& bl, const robot& rb);
+
 };
 
-GLvoid robot::initBuffer(GLuint& vao, GLuint vbo[], std::vector<GLfloat>& vertex, std::vector<GLfloat>& color)
+
+
+GLvoid initBuffer(GLuint& vao, GLuint (&vbo)[2], std::vector<GLfloat>& vertex, std::vector<GLfloat>& color)
 {
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(2, vbo);
@@ -194,6 +122,14 @@ GLvoid robot::initBuffer(GLuint& vao, GLuint vbo[], std::vector<GLfloat>& vertex
 
 }
 
+GLvoid DrawRobot(GLuint& vao, GLuint (&vbo)[2], std::vector<GLfloat>& vertex, glm::mat4& transformation, unsigned int& modelLocation)
+{
+	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformation));
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, vertex.size() / 3);
+}
+
 GLvoid robot::init()
 {
 	initBuffer(vao_body, vbo_body, body, body_color);
@@ -203,19 +139,219 @@ GLvoid robot::init()
 	initBuffer(vao_head, vbo_head, head, head_color);
 }
 
-GLvoid robot::DrawRobot(GLuint& vao, GLuint vbo[], std::vector<GLfloat>& vertex, glm::mat4& transformation, unsigned int& modelLocation)
-{
-	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformation));
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, vertex.size() / 3);
-}
-
 GLvoid robot::Draw(unsigned int& modelLocation)
 {
+	glFrontFace(GL_CCW);
 	DrawRobot(vao_body, vbo_body, body, bodyTrans, modelLocation);
-	DrawRobot(vao_head, vbo_head, body, bodyTrans, modelLocation);
-	DrawRobot(vao_arm, vbo_arm, arm, armTrans, modelLocation);
-	DrawRobot(vao_leg, vbo_leg, leg, legTrans, modelLocation);
+	DrawRobot(vao_head, vbo_head, head, headTrans, modelLocation);
+	DrawRobot(vao_arm, vbo_arm, arm, leftArmTrans, modelLocation);
+	DrawRobot(vao_arm, vbo_arm, arm, rightArmTrans, modelLocation);
+	DrawRobot(vao_leg, vbo_leg, leg, leftLegTrans, modelLocation);
+	DrawRobot(vao_leg, vbo_leg, leg, rightLegTrans, modelLocation);
 	DrawRobot(vao_nose, vbo_nose, nose, noseTrans, modelLocation);
+	glFrontFace(GL_CW);
+
+}
+
+GLvoid robot::initMatrix()
+{
+	bodyTrans = glm::mat4(1.0f);
+	headTrans = glm::mat4(1.0f);
+	leftLegTrans = glm::mat4(1.0f);
+	rightLegTrans = glm::mat4(1.0f);
+	leftArmTrans = glm::mat4(1.0f);
+	rightArmTrans = glm::mat4(1.0f);
+	noseTrans = glm::mat4(1.0f);
+}
+
+GLvoid robot::initRobotModel()
+{
+	headTrans = glm::translate(headTrans, glm::vec3(0.0f, 40.0f, 0.0f));
+	rightLegTrans = glm::translate(rightLegTrans, glm::vec3(15.0f, -30.0f, 0.0f));
+	leftLegTrans = glm::translate(leftLegTrans, glm::vec3(-15.0f, -30.0f, 0.0f));
+	leftArmTrans = glm::translate(leftArmTrans, glm::vec3(-35.0f, 0.0f, 0.0f));
+	rightArmTrans = glm::translate(rightArmTrans, glm::vec3(35.0f, 0.0f, 0.0f));
+	noseTrans = glm::translate(noseTrans, glm::vec3(0.0f, 40.0f, 15.0f));
+}
+
+GLvoid robot::posModel(const glm::vec3& vector)
+{
+	bodyTrans = glm::translate(bodyTrans, vector);
+	headTrans = glm::translate(headTrans, vector);
+	rightLegTrans = glm::translate(rightLegTrans, vector);
+	leftLegTrans = glm::translate(leftLegTrans, vector);
+	leftArmTrans = glm::translate(leftArmTrans, vector);
+	rightArmTrans = glm::translate(rightArmTrans, vector);
+	noseTrans = glm::translate(noseTrans, vector);
+}
+
+GLvoid robot::lookModel()
+{
+	bodyTrans = glm::rotate(bodyTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	headTrans = glm::rotate(headTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	rightLegTrans = glm::rotate(rightLegTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	leftLegTrans = glm::rotate(leftLegTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	leftArmTrans = glm::rotate(leftArmTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	rightArmTrans = glm::rotate(rightArmTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+	noseTrans = glm::rotate(noseTrans, glm::radians(look), glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+GLvoid robot::swingModel()
+{
+	rightLegTrans = glm::rotate(rightLegTrans, glm::radians(swingLeg), glm::vec3(1.0f, 0.0f, 0.0f));
+	leftLegTrans = glm::rotate(leftLegTrans, glm::radians(-swingLeg), glm::vec3(1.0f, 0.0f, 0.0f));
+	leftArmTrans = glm::rotate(leftArmTrans, glm::radians(swingArm), glm::vec3(1.0f, 0.0f, 0.0f));
+	rightArmTrans = glm::rotate(rightArmTrans, glm::radians(-swingArm), glm::vec3(1.0f, 0.0f, 0.0f));
+}
+
+GLvoid robot::changeLook()
+{
+	if (Xdir == 1 && Zdir == 0)
+	{
+		look = 90.0f;
+	}
+	else if (Xdir == -1 && Zdir == 0)
+	{
+		look = -90.0f;
+	}
+	else if (Xdir == 0 && Zdir == 1)
+	{
+		look = 0.0f;
+	}
+	else if (Xdir == 0 && Zdir == -1)
+	{
+		look = 180.0f;
+	}
+	else if (Xdir == 1 && Zdir == 1)
+	{
+		look = 45.0f;
+	}
+	else if (Xdir == -1 && Zdir == 1)
+	{
+		look = -45.0f;
+	}
+	else if (Xdir == -1 && Zdir == -1)
+	{
+		look = -135.0f;
+	}
+	else if (Xdir == 1 && Zdir == -1)
+	{
+		look = 135.0f;
+	}
+}
+
+
+GLvoid robot::move(const block& bl)
+{
+	pos.x += Xdir * 10.0f;
+	pos.z += Zdir * 10.0f;
+
+	if (Xdir != 0 || Zdir != 0)
+	{
+		swingRobot();
+	}
+
+	if (outStage(*this))
+	{
+		telepotePos();
+	}
+
+	//Àå¾Ö¹° Ã¼Å©
+	if (checkBlock(bl, *this))
+	{
+		pos.x -= Xdir * 10.0f;
+		pos.z -= Zdir * 10.0f;
+	}
+
+	if (pos.y > -130.0f && !jumpState)
+	{
+		if ((pos.x <= bl.pos.x - 50.0f || pos.x >= bl.pos.x + 50.0f) ||
+			(pos.z <= bl.pos.z - 50.0f || pos.z >= bl.pos.z + 50.0f))
+		{
+			pos.y -= 10.0f;
+		}
+	}
+}
+
+GLvoid robot::swingRobot()
+{
+	if (swing)
+	{
+		swingArm += 7.5f;
+		swingLeg += 5.0;
+
+		if (swingArm == 45.0f)
+			swing = false;
+	}
+	else
+	{
+		swingArm -= 7.5f;
+		swingLeg -= 5.0;
+
+		if (swingArm == -45.0f)
+			swing = true;
+	}
+}
+
+GLvoid robot::telepotePos()
+{
+	if (pos.x <= -200.f)
+		pos.x = 190.0f;
+	else if (pos.x >= 200.0f)
+		pos.x = -190.0f;
+
+	if (pos.z <= -200.f)
+		pos.z = 190.0f;
+	else if (pos.z >= 200.0f)
+		pos.z = -190.0f;
+}
+
+
+GLvoid robot::jumpRobot(const block& bl)
+{
+
+	if (!fallDown)
+	{
+		jumpHeight += 10.0f;
+		pos.y += 10.0f;
+		if (jumpHeight == 100.0f)
+			fallDown = true;
+	}
+	else
+	{
+		jumpHeight -= 10.0f;
+		pos.y -= 10.0f;
+		if (checkBlock(bl, *this) || pos.y == -130.0f)
+		{
+			fallDown = false;
+			jumpState = false;
+			jumpHeight = 0.0f;
+			pos.y += 10.0f;
+		}
+	}
+}
+
+
+
+GLboolean outStage(const robot& rb)
+{
+	if (rb.pos.x >= 200.0f || rb.pos.x <= -200.0f || rb.pos.z >= 200.0f || rb.pos.z <= -200.0f)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+GLboolean checkBlock(const block& bl, const robot& rb)
+{
+	if (rb.pos.x >= bl.pos.x - 50.0f && rb.pos.x <= bl.pos.x + 50.0f &&
+		rb.pos.z >= bl.pos.z - 50.0f && rb.pos.z <= bl.pos.z + 50.0f)
+	{
+		if (rb.pos.y - 70 < bl.pos.y + 15.0f)
+		{
+			return true;
+		}
+	}
+	return false;
 }

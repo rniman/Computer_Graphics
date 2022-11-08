@@ -1,14 +1,16 @@
 #define _USE_MATH_DEFINES
 #include "axes.h"
 #include "read_Obj.h"
-#include "block.h"
-#include "robot.h"
+#include "cuboid.h"
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 GLvoid TimeEvent(int value);
 GLvoid KeyEvent(unsigned char key, int x, int y);
 GLvoid KeyUpEvent(unsigned char key, int x, int y);
+GLvoid MouseClick();
+GLvoid MouseMove();
+
 void initBuffer();
 
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
@@ -172,13 +174,16 @@ std::vector<std::vector<GLfloat>> stage_color =
 
 glm::mat4 stageTrans[6];
 
-robot Myrobot;
+GLuint vao_cuboid[3];
+GLuint vbo_cuboid_vertex[3];
+GLuint vbo_cuboid_color[3];
 
-block block01;
+std::vector<GLfloat> cuboid[3];
+std::vector<GLfloat> cuboid_color[3];
+glm::mat4 cuboidTrans[3];
+
 
 GLfloat deltaFront = 0.0f;
-
-
 
 int main(int argc, char** argv)
 {
@@ -186,7 +191,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitWindowPosition(300, 50);
 	glutInitWindowSize(window_w, window_h);
-	glutCreateWindow("Example_3_7(18번)");
+	glutCreateWindow("Example_3_10(21번)");
 
 	glewExperimental = GL_TRUE;
 	glewInit();
@@ -194,6 +199,13 @@ int main(int argc, char** argv)
 	for (int i = 0; i < 6; ++i)
 		stageTrans[i] = glm::mat4(1.0f);
 	
+	for (int i = 0; i < 3; ++i)
+	{
+		makeCuboid(cuboid[i], 10 * (i + 1), 10 * (i + 1));
+		setCol(cuboid_color[i], 0.3f, 0.8, 0.9);
+		cuboidTrans[i] = glm::mat4(1.0f);
+		cuboidTrans[i] = glm::translate(cuboidTrans[i], glm::vec3(0.0f, 0.0f, 30.0f * i));
+	}
 	//세이더 읽어와서 세이더 프로그램 만들기
 
 	shaderID = make_shaderProgram();	//세이더 프로그램 만들기
@@ -205,9 +217,8 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(KeyEvent);
 	glutKeyboardUpFunc(KeyUpEvent);
 
-	glFrontFace(GL_CW);
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
@@ -226,7 +237,6 @@ int main(int argc, char** argv)
 	projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 1000.0f);
 	//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0));
 
-	block01.posModel();
 
 	glutMainLoop();
 }
@@ -253,6 +263,7 @@ GLvoid drawScene()
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_LINES, 0, 6);
 
+	glFrontFace(GL_CW);
 	for (int i = 0; i < 6; ++i)
 	{
 		modelLocation = glGetUniformLocation(shaderID, "modelTransform");
@@ -260,10 +271,15 @@ GLvoid drawScene()
 		glBindVertexArray(vao_stage[i]);
 		glDrawArrays(GL_TRIANGLES, 0, stage[i].size() / 3);
 	}
+	glFrontFace(GL_CCW);
 
-	Myrobot.Draw(modelLocation);
-
-	block01.draw(modelLocation);
+	for (int i = 0; i < 3; ++i)
+	{
+		modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(cuboidTrans[i]));
+		glBindVertexArray(vao_cuboid[i]);
+		glDrawArrays(GL_TRIANGLES, 0, cuboid[i].size() / 3);
+	}
 
 	glutSwapBuffers();
 }
@@ -280,36 +296,10 @@ GLvoid TimeEvent(int value)
 	camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	camera = glm::rotate(camera, glm::radians(cameraAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	
-	Myrobot.move(block01);
-	if(Myrobot.jumpState)
-		Myrobot.jumpRobot(block01);
-
-	
-	Myrobot.initMatrix();
-
 	for (int i = 0; i < 6; ++i)
 		stageTrans[i] = glm::mat4(1.0f);
-	if (keyState::o)
-	{
-		if(deltaFront < 400.0f)
-			deltaFront += 10.0f;
-		if (deltaFront == 400.0f)
-			glEnable(GL_CULL_FACE);
- 
-	}
-	else
-	{
-		if(deltaFront > 0.0f)
-			deltaFront -= 10.0f;
-	}
 
 	stageTrans[0] = glm::translate(stageTrans[0], glm::vec3(0.0f, deltaFront, 0.0f));
-
-	Myrobot.posModel(Myrobot.pos);
-	Myrobot.lookModel();
-	Myrobot.initRobotModel();
-	Myrobot.swingModel();
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -319,66 +309,6 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 {
 	if (key == 'q')
 		glutExit();
-	else if (key == 'o')
-	{
-		keyState::o = keyState::o ? false : true;
-	}
-	else if (!keyState::o)
-	{
-
-	}
-	else if (key == 'w')
-	{
-		if (!keyState::w)
-		{
-			keyState::w = true;
-			Myrobot.Xdir += 1;
-			Myrobot.changeLook();
-		}
-	}
-	else if (key == 's')
-	{
-		if (!keyState::s)
-		{
-			keyState::s = true;
-			Myrobot.Xdir -= 1;
-			Myrobot.changeLook();
-		}
-	}
-	else if (key == 'a')
-	{
-		if (!keyState::a)
-		{
-			keyState::a = true;
-			Myrobot.Zdir -= 1;
-			Myrobot.changeLook();
-		}
-	}
-	else if (key == 'd')
-	{
-		if (!keyState::d)
-		{
-			keyState::d = true;
-			Myrobot.Zdir += 1;
-			Myrobot.changeLook();
-		}
-	}
-	else if (key == 'z')
-	{
-		camera_eye.z += 10.0f;
-	}
-	else if (key == 'Z')
-	{
-		camera_eye.z -= 10.0f;
-	}
-	else if (key == 'x')
-	{
-		camera_eye.x += 10.0f;
-	}
-	else if (key == 'X')
-	{
-		camera_eye.x -= 10.0f;
-	}
 	else if (key == 'y')
 	{
 		cameraAngle += 10.0f;
@@ -387,55 +317,12 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		cameraAngle -= 10.0f;
 	}
-	else if (key == 'j')
-	{
-		if (!Myrobot.jumpState)
-			Myrobot.jumpState = true;
-	}
+
 }
 
 GLvoid KeyUpEvent(unsigned char key, int x, int y)
 {
-	if (key == 'w')
-	{
-		if (keyState::w)
-		{
-			keyState::w = false;
-			Myrobot.Xdir -= 1;
-			if(Myrobot.Xdir != 0 || Myrobot.Zdir != 0)
-				Myrobot.changeLook();
-		}
-	}
-	else if (key == 's')
-	{
-		if (keyState::s)
-		{
-			keyState::s = false;
-			Myrobot.Xdir += 1;
-			if (Myrobot.Xdir != 0 || Myrobot.Zdir != 0)
-				Myrobot.changeLook();
-		}
-	}
-	else if (key == 'a')
-	{
-		if (keyState::a)
-		{
-			keyState::a = false;
-			Myrobot.Zdir += 1;
-			if (Myrobot.Xdir != 0 || Myrobot.Zdir != 0)
-				Myrobot.changeLook();
-		}
-	}
-	else if (key == 'd')
-	{
-		if (keyState::d)
-		{
-			keyState::d = false;
-			Myrobot.Zdir -= 1;
-			if (Myrobot.Xdir != 0 || Myrobot.Zdir != 0)
-				Myrobot.changeLook();
-		}
-	}
+
 }
 
 void initBuffer()
@@ -474,7 +361,26 @@ void initBuffer()
 		glEnableVertexAttribArray(0);
 	}
 
-	Myrobot.init();
 
-	block01.initBuffuer();
+	glGenVertexArrays(3, vao_cuboid);
+	glGenBuffers(3, vbo_cuboid_vertex);
+	glGenBuffers(3, vbo_cuboid_color);
+
+	for (int i = 0; i < 3; ++i)
+	{
+
+		glBindVertexArray(vao_cuboid[i]);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_cuboid_color[i]);
+		glBufferData(GL_ARRAY_BUFFER, cuboid_color[i].size() * sizeof(GLfloat), cuboid_color[i].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_cuboid_vertex[i]);
+		glBufferData(GL_ARRAY_BUFFER, cuboid[i].size() * sizeof(GLfloat), cuboid[i].data(), GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+	}
+
 }
