@@ -44,7 +44,7 @@ public:
 	GLvoid setDir();
 	GLvoid move();
 	GLvoid model();
-	GLvoid clamp(const GLfloat& lenth);
+	GLvoid clamp(const GLfloat& lenth, const GLboolean& OKey);
 
 	GLvoid addSphere();
 };
@@ -85,7 +85,7 @@ GLvoid sphere::model()
 	}
 }
 
-GLvoid sphere::clamp(const GLfloat& lenth)
+GLvoid sphere::clamp(const GLfloat& lenth, const GLboolean& OKey)
 {
 
 	for (int i = 0; i < pos.size(); ++i)
@@ -105,7 +105,8 @@ GLvoid sphere::clamp(const GLfloat& lenth)
 		}
 		else if (-lenth * 0.5f >= pos[i].y - 50.0f)
 		{
-			dir[i] = glm::reflect(dir[i], glm::vec3(0.0f, 1.0f, 0.0f));
+			if(!OKey)
+				dir[i] = glm::reflect(dir[i], glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 		
 		if (lenth * 0.5f <= pos[i].z + 50.0f)

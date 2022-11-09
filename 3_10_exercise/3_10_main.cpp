@@ -17,6 +17,8 @@ void initBuffer();
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
 GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
 
+GLvoid clampCuboid(glm::vec3& pos, const GLfloat& width, const GLfloat& angle, GLboolean& reach, glm::vec3& fall_vec);
+
 const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.0f, gColor = 0.0f, bColor = 0.0f;
 
@@ -179,6 +181,8 @@ std::vector<std::vector<GLfloat>> stage_color =
 
 glm::mat4 stageTrans[6];
 
+GLfloat openFloor = 0.0f;
+
 GLuint vao_cuboid[3];
 GLuint vbo_cuboid_vertex[3];
 GLuint vbo_cuboid_color[3];
@@ -186,6 +190,14 @@ GLuint vbo_cuboid_color[3];
 std::vector<GLfloat> cuboid[3];
 std::vector<GLfloat> cuboid_color[3];
 glm::mat4 cuboidTrans[3];
+glm::vec3 cuboid_pos[3];
+glm::vec3 fall_vector[3];
+GLfloat cuboidLenth[3];
+GLboolean reach_flat[3];
+GLfloat cuboid_speed[3];
+
+GLboolean left_down = false;
+GLfloat old_x, old_y;
 
 GLuint vao_sphere;
 GLuint vbo_sphere_vertex;
@@ -197,7 +209,6 @@ glm::mat4 sphereTrans[5];
 //objRead sphere;
 sphere moveSphere(1);
 
-GLfloat deltaFront = 0.0f;
 
 int main(int argc, char** argv)
 {
@@ -221,7 +232,15 @@ int main(int argc, char** argv)
 		setCol(cuboid_color[i], 0.3f, 0.8, 0.9);
 		cuboidTrans[i] = glm::mat4(1.0f);
 		cuboidTrans[i] = glm::translate(cuboidTrans[i], glm::vec3(0.0f, 0.0f, 30.0f * i));
+		fall_vector[i] = glm::vec3(0.0f, -1.0f, 0.0f);
+		reach_flat[i] = false;
+		cuboidLenth[i] = 20 * (i + 1);
+		cuboid_speed[i] = 9.0f + i;
 	}
+
+	cuboid_pos[0] = glm::vec3(0.0f, 0.0f, 0.0f);
+	cuboid_pos[1] = glm::vec3(0.0f, 0.0f, 30.0f);
+	cuboid_pos[2] = glm::vec3(0.0f, 0.0f, 60.0f);
 
 	//for (int i = 0; i < sphere.outvertex.size(); ++i)
 	//{
@@ -305,20 +324,6 @@ GLvoid drawScene()
 		glDrawArrays(GL_TRIANGLES, 0, cuboid[i].size() / 3);
 	}
 
-	//for (int i = 0; i < 5; ++i)
-	//{
-	//	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereTrans[i]));
-	//	glBindVertexArray(vao_sphere);
-	//	glDrawArrays(GL_TRIANGLES, 0, sphere.outvertex.size());
-	//}
-
-	//for (int i = 0; i < 5; ++i)
-	//{
-	//	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(moveSphere.transformation[i]));
-	//	glBindVertexArray(moveSphere.vao_sphere);
-	//	glDrawArrays(GL_TRIANGLES, 0, moveSphere.object.outvertex.size());
-	//}
-
 	moveSphere.draw(modelLocation);
 
 	glutSwapBuffers();
@@ -339,13 +344,34 @@ GLvoid TimeEvent(int value)
 
 	for (int i = 0; i < 6; ++i)
 		stageTrans[i] = glm::mat4(1.0f);
+	for (int i = 0; i < 3; ++i)
+		cuboidTrans[i] = glm::mat4(1.0f);
 
-	stageTrans[0] = glm::translate(stageTrans[0], glm::vec3(0.0f, deltaFront, 0.0f));
 
 	moveSphere.move();
-	moveSphere.clamp(400.0f);
+	moveSphere.clamp(400.0f, keyState::o);
 	moveSphere.model();
 
+
+	for (int i = 0; i < 3; ++i)
+	{
+		cuboid_pos[i] += cuboid_speed[i] * fall_vector[i];
+		clampCuboid(cuboid_pos[i], cuboidLenth[i], cameraUpAngle, reach_flat[i], fall_vector[i]);
+		cuboidTrans[i] = glm::translate(cuboidTrans[i], glm::vec3(cuboid_pos[i]));
+	}
+
+	if (keyState::o)
+	{
+		if (openFloor < 400.0f)
+			openFloor += 10.0f;
+		stageTrans[5] = glm::translate(stageTrans[5], glm::vec3(openFloor, 0.0f, 0.0f));
+	}
+	else
+	{
+		if(openFloor > 0.0f)
+			openFloor -= 10.0f;
+		stageTrans[5] = glm::translate(stageTrans[5], glm::vec3(openFloor, 0.0f, 0.0f));
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -376,10 +402,13 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		if(moveSphere.pos.size() < 5)
 			moveSphere.addSphere();
 	}
+	else if (key == 'o')
+	{
+		keyState::o = keyState::o ? false : true;
+	}
 }
 
-GLboolean left_down = false;
-GLfloat old_x, old_y;
+
 
 GLvoid MouseClick(int button, int state, int x, int y)
 {
@@ -403,8 +432,26 @@ GLvoid MouseMove(int x, int y)
 		cameraUpAngle += (x - old_x);
 		old_x = x;
 		old_y = y;
-		std::cout << cameraUpAngle << std::endl;
-		//value_floor = 
+		
+		if (cameraUpAngle > 180.0f)
+			cameraUpAngle = cameraUpAngle - 360.0f;
+		if(cameraUpAngle <= -180.0f)
+			cameraUpAngle = cameraUpAngle + 360.0f;
+
+
+
+		for (int i = 0; i < 3; ++i)
+		{
+			if (!reach_flat[i])
+			{
+				glm::mat4 rotate_vector(1.0f);
+				fall_vector[i] = glm::vec3(0.0f, -1.0f, 0.0f);
+				rotate_vector = glm::rotate(rotate_vector, glm::radians(-cameraUpAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+				glm::vec4 fall_vec4 = rotate_vector * glm::vec4(fall_vector[i], 1.0f);
+				fall_vector[i] = glm::vec3(fall_vec4.x, fall_vec4.y, fall_vec4.z);
+			}
+		}
+
 	}
 }
 
@@ -465,21 +512,153 @@ void initBuffer()
 		glEnableVertexAttribArray(0);
 
 	}
+}
 
-	//glGenVertexArrays(1, &vao_sphere);
-	//glGenBuffers(1, &vbo_sphere_vertex);
-	//glGenBuffers(1, &vbo_sphere_color);
+GLvoid clampCuboid(glm::vec3& pos,const GLfloat& length, const GLfloat& angle, GLboolean& reach, glm::vec3& fall_vec)
+{
+	if (angle == 0.0f)
+	{
+		if (keyState::o)
+		{
+			fall_vec = glm::vec3(0.0f, -1.0f, 0.0f);
+			return;
+		}
 
-	//glBindVertexArray(vao_sphere);
+		if (pos.x - length / 2 <= -200.0f)
+		{
+			pos.x = -200.0f + length / 2;
+		}
 
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere_color);
-	//glBufferData(GL_ARRAY_BUFFER, sphere_color.size() * sizeof(GLfloat), sphere_color.data(), GL_STATIC_DRAW);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glEnableVertexAttribArray(1);
+		if (pos.x + length / 2 >= 200.0f)
+		{
+			pos.x = 200.0f - length / 2;
+		}
 
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere_vertex);
-	//glBufferData(GL_ARRAY_BUFFER, sphere.outvertex.size() * sizeof(glm::vec3), sphere.outvertex.data(), GL_STATIC_DRAW);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glEnableVertexAttribArray(0);
+		if (pos.y - length / 2 <= -200.0f)
+		{
+			reach = true;
+			pos.y = -200.0f + length / 2;
+			fall_vec = glm::vec3(0.0f, -1.0f, 0.0f);
+		}
+	}
+	else if (angle > 0.0f && angle < 90.0f)
+	{
+		if (pos.x - length / 2 <= -200.0f && pos.y - length / 2 >= -200.0f)
+		{
+			reach = true;
+			pos.x = -200.0f + length / 2;
+			fall_vec = glm::vec3(0.0f, -1.0f, 0.0f);
+		}
+		else if (pos.x - length / 2 >= -200.0f && pos.y - length / 2 <= -200.0f && !keyState::o)
+		{
+			reach = true;
+			pos.y = -200.0f + length / 2;
+			fall_vec = glm::vec3(-1.0f, 0.0f, 0.0f);
+		}
+		else
+			reach = false;
+	}
+	else if (angle == 90.0f)
+	{
+		if (pos.y + length / 2 >= 200.0f)
+			pos.y = 200.0f - length / 2;
+			
+		if(pos.y - length / 2 <= -200.0f && !keyState::o)
+			pos.y = -200.0f + length / 2;
 
+		if (pos.x - length / 2 <= -200.0f)
+		{
+			reach = true;
+			pos.x = -200.0f + length / 2;
+			fall_vec = glm::vec3(-1.0f, 0.0f, 0.0f);
+		}
+	}
+	else if (angle > 90.0f && angle < 180.0f)
+	{
+		if (pos.x - length / 2 <= -200.0f && pos.y + length / 2 <= 200.0f)
+		{
+			reach = true;
+			pos.x = -200.0f + length / 2;
+			fall_vec = glm::vec3(0.0f, 1.0f, 0.0f);
+		}
+		else if (pos.x - length / 2 >= -200.0f && pos.y + length / 2 >= 200.0f)
+		{
+			reach = true;
+			pos.y = 200.0f - length / 2;
+			fall_vec = glm::vec3(-1.0f, 0.0f, 0.0f);
+		}
+		else
+			reach = false;
+		//floor_line = glm::vec2(-200.0f, 200.0f);
+	}
+	else if (angle == 180.0f)
+	{
+		if (pos.x - length / 2 <= -200.0f)
+		{
+			pos.x = -200.0f + length / 2;
+		}
+
+		if (pos.x + length / 2 >= 200.0f)
+		{
+			pos.x = 200.0f - length / 2;
+		}
+
+		if (pos.y + length / 2 >= 200.0f)
+		{
+			reach = true;
+			pos.y = 200.0f - length / 2;
+			fall_vec = glm::vec3(0.0f, 1.0f, 0.0f);
+		}
+	}
+	else if (angle > -90.0f && angle < 0.0f)
+	{
+		if (pos.x + length / 2 >= 200.0f && pos.y - length / 2 >= -200.0f)
+		{
+			reach = true;
+			pos.x = 200.0f - length / 2;
+			fall_vec = glm::vec3(0.0f, -1.0f, 0.0f);
+		}
+		else if (pos.x + length / 2 <= 200.0f && pos.y - length / 2 <= -200.0f && !keyState::o)
+		{
+			reach = true;
+			pos.y = -200.0f + length / 2;
+			fall_vec = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+		else
+			reach = false;
+		//floor_line = glm::vec2(200.0f, -200.0f);
+	}
+	else if (angle == -90.0f)
+	{
+		if (pos.y + length / 2 >= 200.0f)
+			pos.y = 200.0f - length / 2;
+
+		if (pos.y - length / 2 <= -200.0f && !keyState::o)
+			pos.y = -200.0f + length / 2;
+
+		if (pos.x + length / 2 >= 200.0f)
+		{
+			reach = true;
+			pos.x = 200.0f - length / 2;
+			fall_vec = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+	}
+	else if (angle > -180.0f && angle < -90.0f)
+	{
+		if (pos.x + length / 2 >= 200.0f && pos.y + length / 2 <= 200.0f)
+		{
+			reach = true;
+			pos.x = 200.0f - length / 2;
+			fall_vec = glm::vec3(0.0f, 1.0f, 0.0f);
+		}
+		else if (pos.x + length / 2 <= 200.0f && pos.y + length / 2 >= 200.0f)
+		{
+			reach = true;
+			pos.y = 200.0f - length / 2;
+			fall_vec = glm::vec3(1.0f, 0.0f, 0.0f);
+		}
+		else
+			reach = false;
+		//floor_line = glm::vec2(200.0f, 200.0f);
+	}
 }
