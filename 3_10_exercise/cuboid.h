@@ -1,6 +1,5 @@
 #pragma once
 #include "make_Shader.h"
-#include <vector>
 
 //width = ∫Ø/2  height = ≥Ù¿Ã / 2
 GLvoid makeCuboid(std::vector<GLfloat>& obj, const GLfloat& width, const GLfloat& hegiht)

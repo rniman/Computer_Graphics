@@ -94,12 +94,38 @@ public:
 	GLvoid telepotePos();
 	GLvoid jumpRobot(const block& bl);
 	GLvoid jump();
-	
+	GLvoid reset();
+
 	//friend GLboolean checkFloor(const robot& rb, const block);
 	friend GLboolean outStage(const robot& rb);
 	friend GLboolean checkBlock(const block& bl, const robot& rb);
 
 };
+
+GLvoid robot::reset()
+{
+	bodyTrans = glm::mat4(1.0f);
+	headTrans = glm::mat4(1.0f);
+	leftLegTrans = glm::mat4(1.0f);
+	rightLegTrans = glm::mat4(1.0f);
+	leftArmTrans = glm::mat4(1.0f);
+	rightArmTrans = glm::mat4(1.0f);
+	noseTrans = glm::mat4(1.0f);
+
+	pos = glm::vec3(0.0f, -130.0f, 0.0f);
+
+	Xdir = 0;
+	Zdir = 0;
+	look = 90.0f;
+
+	swing = true;
+	swingArm = 0.0f;
+	swingLeg = 0.0f;
+
+	jumpState = false;
+	fallDown = false;
+	jumpHeight = 0.0f;
+}
 
 
 

@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 #include "make_Shader.h"
 
 struct axes_coordination
@@ -21,8 +20,8 @@ struct axes_coordination
 
 	std::vector<GLfloat> axes_color =
 	{
-		0.0f,0.0f,0.0f,
-		0.0f,0.0f,0.0f,
+		0.3f,0.7f,0.0f,
+		0.3f,0.7f,0.0f,
 		
 		0.5f,0.5f,1.0f,
 		0.5f,0.5f,1.0f,

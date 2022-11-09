@@ -2,6 +2,7 @@
 #include "axes.h"
 #include "read_Obj.h"
 #include "cuboid.h"
+#include "sphere.h"
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
@@ -17,7 +18,8 @@ GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& o
 GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
 
 const GLint window_w = 600, window_h = 600;
-GLfloat rColor = 0.5f, gColor = 0.5f, bColor = 0.5f;
+GLfloat rColor = 0.0f, gColor = 0.0f, bColor = 0.0f;
+
 
 namespace keyState
 {
@@ -123,52 +125,52 @@ std::vector<std::vector<GLfloat>> stage =
 std::vector<std::vector<GLfloat>> stage_color =
 {
 	{
-	1.0f,0.5f,0.0f,
-	1.0f,0.5f,0.0f,
-	1.0f,0.5f,0.0f,
-	1.0f,0.5f,0.0f,
-	1.0f,0.5f,0.0f,
-	1.0f,0.5f,0.0f
+	0.8f,0.8f,0.8f,
+	0.8f,0.8f,0.8f,
+	0.8f,0.8f,0.8f,
+	0.8f,0.8f,0.8f,
+	0.8f,0.8f,0.8f,
+	0.8f,0.8f,0.8f
 	},
 	{
-	0.0f,1.0f,0.0f,
-	0.0f,1.0f,0.0f,
-	0.0f,1.0f,0.0f,
-	0.0f,1.0f,0.0f,
-	0.0f,1.0f,0.0f,
-	0.0f,1.0f,0.0f
+	0.5f,0.5f,0.5f,
+	0.5f,0.5f,0.5f,
+	0.5f,0.5f,0.5f,
+	0.5f,0.5f,0.5f,
+	0.5f,0.5f,0.5f,
+	0.5f,0.5f,0.5f
 	},
 	{
-	1.0f,1.0f,1.0f,
-	1.0f,1.0f,1.0f,
-	1.0f,1.0f,1.0f,
-	1.0f,1.0f,1.0f,
-	1.0f,1.0f,1.0f,
-	1.0f,1.0f,1.0f
+	0.7f,0.7f,0.7f,
+	0.7f,0.7f,0.7f,
+	0.7f,0.7f,0.7f,
+	0.7f,0.7f,0.7f,
+	0.7f,0.7f,0.7f,
+	0.7f,0.7f,0.7f
 	},
 	{
-	1.0f,0.0f,1.0f,
-	1.0f,0.0f,1.0f,
-	1.0f,0.0f,1.0f,
-	1.0f,0.0f,1.0f,
-	1.0f,0.0f,1.0f,
-	1.0f,0.0f,1.0f
+	0.4f,0.4f,0.4f,
+	0.4f,0.4f,0.4f,
+	0.4f,0.4f,0.4f,
+	0.4f,0.4f,0.4f,
+	0.4f,0.4f,0.4f,
+	0.4f,0.4f,0.4f
 	},
 	{
-	0.0f,0.0f,1.0f,
-	0.0f,0.0f,1.0f,
-	0.0f,0.0f,1.0f,
-	0.0f,0.0f,1.0f,
-	0.0f,0.0f,1.0f,
-	0.0f,0.0f,1.0f
+	0.9f,0.9f,0.9f,
+	0.9f,0.9f,0.9f,
+	0.9f,0.9f,0.9f,
+	0.9f,0.9f,0.9f,
+	0.9f,0.9f,0.9f,
+	0.9f,0.9f,0.9f
 	},
 	{
-	1.0f,0.0f,0.0f,
-	1.0f,0.0f,0.0f,
-	1.0f,0.0f,0.0f,
-	1.0f,0.0f,0.0f,
-	1.0f,0.0f,0.0f,
-	1.0f,0.0f,0.0f
+	0.2f,0.2f,0.2f,
+	0.2f,0.2f,0.2f,
+	0.2f,0.2f,0.2f,
+	0.2f,0.2f,0.2f,
+	0.2f,0.2f,0.2f,
+	0.2f,0.2f,0.2f
 	}
 };
 
@@ -182,6 +184,15 @@ std::vector<GLfloat> cuboid[3];
 std::vector<GLfloat> cuboid_color[3];
 glm::mat4 cuboidTrans[3];
 
+GLuint vao_sphere;
+GLuint vbo_sphere_vertex;
+GLuint vbo_sphere_color;
+
+std::vector<GLfloat> sphere_color;
+glm::mat4 sphereTrans[5];
+
+//objRead sphere;
+sphere moveSphere(1);
 
 GLfloat deltaFront = 0.0f;
 
@@ -196,6 +207,8 @@ int main(int argc, char** argv)
 	glewExperimental = GL_TRUE;
 	glewInit();
 
+	//sphere.loadObj_normalize_center("sphere.obj");
+
 	for (int i = 0; i < 6; ++i)
 		stageTrans[i] = glm::mat4(1.0f);
 	
@@ -206,10 +219,22 @@ int main(int argc, char** argv)
 		cuboidTrans[i] = glm::mat4(1.0f);
 		cuboidTrans[i] = glm::translate(cuboidTrans[i], glm::vec3(0.0f, 0.0f, 30.0f * i));
 	}
+
+	//for (int i = 0; i < sphere.outvertex.size(); ++i)
+	//{
+	//	sphere_color.push_back(0.0f);
+	//	sphere_color.push_back(0.7f);
+	//	sphere_color.push_back(1.0f);
+	//}
+
+	for (int i = 0; i < 5; ++i)
+		sphereTrans[i] = glm::mat4(1.0f);
+
 	//세이더 읽어와서 세이더 프로그램 만들기
 
 	shaderID = make_shaderProgram();	//세이더 프로그램 만들기
 	initBuffer();
+	moveSphere.init();
 
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
@@ -225,18 +250,15 @@ int main(int argc, char** argv)
 	viewLocation = glGetUniformLocation(shaderID, "viewTransform");
 	projLocation = glGetUniformLocation(shaderID, "projectionTransform");
 
-
 	//camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.1f, -0.1f));
 	//camera = glm::lookAt(glm::vec3(0.0f, -300.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-0.1f, 0.0f, -0.1f));
 	camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	
-
 	projection = glm::mat4(1.0f);
 	//근평면은 포함이고 원평면은 포함X
 	//projection = glm::ortho(-300.0f, 300.0f, -300.0f, 300.0f, 50.0f, 600.0f);
 	projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 1000.0f);
 	//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -2.0));
-
 
 	glutMainLoop();
 }
@@ -266,7 +288,6 @@ GLvoid drawScene()
 	glFrontFace(GL_CW);
 	for (int i = 0; i < 6; ++i)
 	{
-		modelLocation = glGetUniformLocation(shaderID, "modelTransform");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(stageTrans[i]));
 		glBindVertexArray(vao_stage[i]);
 		glDrawArrays(GL_TRIANGLES, 0, stage[i].size() / 3);
@@ -275,11 +296,26 @@ GLvoid drawScene()
 
 	for (int i = 0; i < 3; ++i)
 	{
-		modelLocation = glGetUniformLocation(shaderID, "modelTransform");
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(cuboidTrans[i]));
 		glBindVertexArray(vao_cuboid[i]);
 		glDrawArrays(GL_TRIANGLES, 0, cuboid[i].size() / 3);
 	}
+
+	//for (int i = 0; i < 5; ++i)
+	//{
+	//	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(sphereTrans[i]));
+	//	glBindVertexArray(vao_sphere);
+	//	glDrawArrays(GL_TRIANGLES, 0, sphere.outvertex.size());
+	//}
+
+	//for (int i = 0; i < 5; ++i)
+	//{
+	//	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(moveSphere.transformation[i]));
+	//	glBindVertexArray(moveSphere.vao_sphere);
+	//	glDrawArrays(GL_TRIANGLES, 0, moveSphere.object.outvertex.size());
+	//}
+
+	moveSphere.draw(modelLocation);
 
 	glutSwapBuffers();
 }
@@ -301,6 +337,11 @@ GLvoid TimeEvent(int value)
 
 	stageTrans[0] = glm::translate(stageTrans[0], glm::vec3(0.0f, deltaFront, 0.0f));
 
+	moveSphere.move();
+	moveSphere.clamp(400.0f);
+	moveSphere.model();
+
+
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
 }
@@ -317,7 +358,19 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		cameraAngle -= 10.0f;
 	}
-
+	else if (key == 'z')
+	{
+		camera_eye.z += 10.0f;
+	}
+	else if (key == 'Z')
+	{
+		camera_eye.z -= 10.0f;
+	}
+	else if (key == 'b')
+	{
+		if(moveSphere.pos.size() < 5)
+			moveSphere.addSphere();
+	}
 }
 
 GLvoid KeyUpEvent(unsigned char key, int x, int y)
@@ -382,5 +435,21 @@ void initBuffer()
 		glEnableVertexAttribArray(0);
 
 	}
+
+	//glGenVertexArrays(1, &vao_sphere);
+	//glGenBuffers(1, &vbo_sphere_vertex);
+	//glGenBuffers(1, &vbo_sphere_color);
+
+	//glBindVertexArray(vao_sphere);
+
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere_color);
+	//glBufferData(GL_ARRAY_BUFFER, sphere_color.size() * sizeof(GLfloat), sphere_color.data(), GL_STATIC_DRAW);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//glEnableVertexAttribArray(1);
+
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere_vertex);
+	//glBufferData(GL_ARRAY_BUFFER, sphere.outvertex.size() * sizeof(glm::vec3), sphere.outvertex.data(), GL_STATIC_DRAW);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//glEnableVertexAttribArray(0);
 
 }

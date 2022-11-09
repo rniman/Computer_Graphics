@@ -540,7 +540,7 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		else
 		{
 			projection = glm::perspective(glm::radians(90.0f), 1.0f, 50.0f, 600.0f);
-			projection = glm::translate(projection, glm::vec3(0.0, 0.0, -100.0)); //-> 어떤원리인지 모르겠다
+			//projection = glm::translate(projection, glm::vec3(0.0, 0.0, -100.0)); //-> 어떤원리인지 모르겠다
 		}
 	}
 }

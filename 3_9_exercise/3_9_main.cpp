@@ -179,7 +179,6 @@ block block01;
 GLfloat deltaFront = 0.0f;
 
 
-
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
@@ -323,9 +322,12 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		keyState::o = keyState::o ? false : true;
 	}
-	else if (!keyState::o)
+	else if (key == 'i')
 	{
-
+		camera_eye = glm::vec3(0.0f, 0.0f, 500.0f);
+		cameraAngle = 0.0f;
+		deltaFront = 0.0f;
+		Myrobot.reset();
 	}
 	else if (key == 'w')
 	{

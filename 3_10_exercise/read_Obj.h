@@ -1,7 +1,7 @@
 #pragma once
 #include "make_Shader.h"
-#include <vector>
 #include <string.h>
+
 
 struct objRead {
 
@@ -22,8 +22,10 @@ struct objRead {
 	float sizeX, sizeY, sizeZ;
 
 	int loadObj_normalize_center(const char* filename);
-
 };
+
+GLvoid setColor(const objRead& obj, std::vector<GLfloat>& color, const GLfloat& r, const GLfloat& g, const GLfloat& b);
+
 
 int objRead::loadObj_normalize_center(const char* filename)
 {
@@ -134,4 +136,14 @@ int objRead::loadObj_normalize_center(const char* filename)
 	}
 
 	return outvertex.size();
+}
+
+GLvoid setColor(const objRead& obj, std::vector<GLfloat>& color,const GLfloat& r, const GLfloat& g, const GLfloat& b)
+{
+	for (int i = 0; i < obj.outvertex.size(); ++i)
+	{
+		color.push_back(r);
+		color.push_back(g);
+		color.push_back(b);
+	}
 }
