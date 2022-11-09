@@ -8,9 +8,9 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 GLvoid TimeEvent(int value);
 GLvoid KeyEvent(unsigned char key, int x, int y);
-GLvoid KeyUpEvent(unsigned char key, int x, int y);
-GLvoid MouseClick();
-GLvoid MouseMove();
+GLvoid MouseClick(int button, int state, int x, int y);
+GLvoid MouseMove(int x, int y);
+
 
 void initBuffer();
 
@@ -49,9 +49,12 @@ unsigned int modelLocation;
 unsigned int viewLocation;
 unsigned int projLocation;
 
+GLfloat cameraAngle = 0.0f;
+GLfloat cameraUpAngle = 0.0f;
 glm::mat4 camera;
 glm::vec3 camera_eye = glm::vec3(0.0f,0.0f,500.0f);
-GLfloat cameraAngle = 0.0f;
+GLfloat value_floor = -200.0f;
+
 
 glm::mat4 projection;
 glm::mat4 view;
@@ -240,7 +243,8 @@ int main(int argc, char** argv)
 	glutReshapeFunc(Reshape);
 	glutTimerFunc(100, TimeEvent, 0);
 	glutKeyboardFunc(KeyEvent);
-	glutKeyboardUpFunc(KeyUpEvent);
+	glutMouseFunc(MouseClick);
+	glutMotionFunc(MouseMove);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -329,7 +333,8 @@ GLvoid Reshape(int w, int h)
 GLvoid TimeEvent(int value)
 {
 	camera = glm::mat4(1.0f);
-	camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	camera = glm::lookAt(camera_eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,1.0f,0.0f));
+	camera = glm::rotate(camera, glm::radians(cameraUpAngle), glm::vec3(0.0f, 0.0f, 1.0f));
 	camera = glm::rotate(camera, glm::radians(cameraAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	for (int i = 0; i < 6; ++i)
@@ -373,9 +378,34 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	}
 }
 
-GLvoid KeyUpEvent(unsigned char key, int x, int y)
-{
+GLboolean left_down = false;
+GLfloat old_x, old_y;
 
+GLvoid MouseClick(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		left_down = true;
+		old_x = x;
+		old_y = y;
+	}
+
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	{
+		left_down = false;
+	}
+}
+
+GLvoid MouseMove(int x, int y)
+{
+	if (left_down)
+	{
+		cameraUpAngle += (x - old_x);
+		old_x = x;
+		old_y = y;
+		std::cout << cameraUpAngle << std::endl;
+		//value_floor = 
+	}
 }
 
 void initBuffer()
