@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 #include "axes.h"
 #include "read_Obj.h"
+#include "cuboid.h"
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
@@ -80,8 +81,20 @@ glm::vec3 delta;
 
 GLboolean startRotate = false;
 
-glm::vec3 lightPos = glm::vec3(600.0f, 0.0f, 0.0f);
-glm::vec3 cameraEye = glm::vec3(600.0f, 0.0f, 0.0f);
+glm::vec3 lightPos = glm::vec3(200.0f, 0.0f, 200.0);
+glm::vec3 origin_lightPos = glm::vec3(200.0f, 0.0f, 200.0);
+glm::vec3 cameraEye = glm::vec3(400.0f, 400.0f, 400.0f);
+GLfloat cameraAngle = 0.0f;
+
+unsigned int vao_light;
+unsigned int vbo_light[2];
+std::vector<GLfloat> light_vertex;
+std::vector<GLfloat> light_normal;
+glm::mat4 light_trans = glm::mat4(1.0f);
+
+glm::vec3 light_color = glm::vec3(1.0f, 1.0f, 1.0f);
+GLint light_color_state = 0;
+GLfloat light_angle = 0.0f;
 
 int main(int argc, char** argv)
 {
@@ -93,6 +106,9 @@ int main(int argc, char** argv)
 
 	glewExperimental = GL_TRUE;
 	glewInit();
+
+	makeCuboid(light_vertex, 25, 25);
+	setNormal(light_normal);
 
 	for (float i = 0; i < 360.0f; i += 10.0f)
 	{
@@ -131,7 +147,8 @@ int main(int argc, char** argv)
 	glutKeyboardFunc(KeyEvent);
 
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
+	//glEnable(GL_LIGHTING);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
@@ -159,7 +176,7 @@ GLvoid drawScene()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUniform3f(lightPosLocation, lightPos.x, lightPos.y, lightPos.z);
-	glUniform3f(lightColorLocation, 1.0f, 1.0f, 1.0f);
+	glUniform3f(lightColorLocation, light_color.x, light_color.y, light_color.z);
 	glUniform3f(viewPosLocation, cameraEye.x, cameraEye.y, cameraEye.z);
 
 	//랜더링 파이프라인에 세이더 불러오기
@@ -186,7 +203,7 @@ GLvoid drawScene()
 		glBindVertexArray(vao_route[i]);
 		glDrawArrays(GL_LINE_LOOP, 0, route[i].size());
 	}
-	glUniform3f(objColorLocation, 1.0f, 0.5f, 0.0f);
+	glUniform3f(objColorLocation, 0.3f, 0.2f, 0.4f);
 
 	//중심원(큰원)
 	glBindVertexArray(vao[1]);
@@ -208,6 +225,11 @@ GLvoid drawScene()
 		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(transformationSmallSphere[i]));
 		glDrawArrays(GL_TRIANGLES, 0, smallSphereSize);
 	}
+
+	glBindVertexArray(vao_light);
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(light_trans));
+	glUniform3f(objColorLocation, light_color.x, light_color.y, light_color.z);
+	glDrawArrays(GL_TRIANGLES, 0, light_vertex.size() / 3);
 
 	glutSwapBuffers();
 }
@@ -246,8 +268,6 @@ GLvoid TimeEvent(int value)
 	smallAngle[0] = smallAngle[0] + 17.0f;
 	smallAngle[1] = smallAngle[1] + 17.0f;
 	smallAngle[2] = smallAngle[2] + 17.0f;
-
-
 
 
 	if (startRotate)
@@ -319,6 +339,22 @@ GLvoid TimeEvent(int value)
 	transformationRoute[5] = glm::translate(transformationRoute[5], center[2]);
 
 
+	light_trans = glm::mat4(1.0f);
+	lightPos = origin_lightPos + delta;
+	light_trans = glm::translate(light_trans, delta);
+	light_trans = glm::rotate(light_trans, glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	
+	light_trans = glm::translate(light_trans, lightPos);
+	light_trans = glm::translate(light_trans, -origin_lightPos);
+	light_trans = glm::rotate(light_trans, glm::radians(light_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+	light_trans = glm::translate(light_trans, origin_lightPos);
+
+	lightPos = glm::vec3(light_trans * glm::vec4(origin_lightPos, 1.0f));
+
+	camera = glm::mat4(1.0f);
+	camera = glm::lookAt(cameraEye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	camera = glm::rotate(camera, glm::radians(cameraAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
 }
@@ -335,7 +371,7 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 		if(keyState::p)
 			projection = glm::ortho(-500.0f, 500.0f, -500.0f, 500.0f, 10.0f, 1000.0f);
 		else
-			projection = glm::perspective(glm::radians(90.0f), 1.0f, 10.0f, 800.0f);	
+			projection = glm::perspective(glm::radians(90.0f), 1.0f, 10.0f, 1000.0f);	
 	}
 	else if (key == 'm')
 	{
@@ -374,6 +410,35 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		keyState::y = keyState::y ? false : true;
 		startRotate = true;
+	}
+	else if (key == 'c')
+	{
+		light_color_state = (light_color_state + 1) % 3;
+
+		if (light_color_state == 0)
+		{
+			light_color = glm::vec3(1.0f, 1.0f, 1.0f);
+		}
+		else if (light_color_state == 1)
+		{
+			light_color = glm::vec3(0.6f, 0.5f, 0.0f);
+		}
+		else if (light_color_state == 2)
+		{
+			light_color = glm::vec3(0.3f, 0.8f, 0.2f);
+		}
+	}
+	else if (key == 'r')
+	{
+		light_angle += 10.0f;
+	}
+	else if (key == 'R')
+	{
+		light_angle -= 10.0f;
+	}
+	else if (key == 'n')
+	{
+		cameraAngle += 10.0f;
 	}
 }
 
@@ -417,6 +482,7 @@ void initBuffer()
 	glBufferData(GL_ARRAY_BUFFER, bigSphere.outnormal.size() * sizeof(glm::vec3), bigSphere.outnormal.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
+	std::cout << bigSphere.outnormal.size();
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_sphere[0]);
 	glBufferData(GL_ARRAY_BUFFER, bigSphere.outvertex.size() * sizeof(glm::vec3), bigSphere.outvertex.data(), GL_STATIC_DRAW);
@@ -446,4 +512,20 @@ void initBuffer()
 	glBufferData(GL_ARRAY_BUFFER, smallSphere.outvertex.size() * sizeof(glm::vec3), smallSphere.outvertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
+
+	glGenVertexArrays(1, &vao_light);
+	glGenBuffers(2, vbo_light);
+
+	glBindVertexArray(vao_light);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_light[1]);
+	glBufferData(GL_ARRAY_BUFFER, light_normal.size() * sizeof(GLfloat), light_normal.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_light[0]);
+	glBufferData(GL_ARRAY_BUFFER, light_vertex.size() * sizeof(GLfloat), light_vertex.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
 }

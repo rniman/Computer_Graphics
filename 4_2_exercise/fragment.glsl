@@ -19,7 +19,7 @@ void main(void)
 	vec3 Normal = out_Normal;
 
 	//앰비언트 (주변조명(간접조명))
-	float ambientLight = 0.7;                                               //--- 주변 조명 계수: 0.0 ≤ ambientLight ≤ 1.0 
+	float ambientLight = 0.5;                                               //--- 주변 조명 계수: 0.0 ≤ ambientLight ≤ 1.0 
 	vec3 ambient = ambientLight * lightColor;							    //--- 주변 조명값
 
 	//디퓨즈 (산란 반사 조명)

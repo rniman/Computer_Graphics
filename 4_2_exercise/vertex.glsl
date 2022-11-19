@@ -15,5 +15,5 @@ void main()
 
 	FragPos = vec3(modelTransform * vec4(vPos, 1.0));
 
-	out_Normal = vec3(modelTransform * vec4(vNormal, 1.0));
+	out_Normal = vNormal;
 }
