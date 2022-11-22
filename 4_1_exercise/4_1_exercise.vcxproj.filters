@@ -34,10 +34,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragment.glsl">
+    <None Include="vertex.glsl">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="vertex.glsl">
+    <None Include="fragment.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

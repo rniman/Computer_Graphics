@@ -1,16 +1,16 @@
-ï»¿#version 330
-//out_Color: ë²„í…ìŠ¤ ì„¸ì´ë”ì—ì„œ ì…ë ¥ë°›ëŠ” ìƒ‰ìƒ ê°’
-//FragColor: ì¶œë ¥í•  ìƒ‰ìƒì˜ ê°’ìœ¼ë¡œ í”„ë ˆì„ ë²„í¼ë¡œ ì „ë‹¬ ë¨. 
+#version 330
+//out_Color: ¹öÅØ½º ¼¼ÀÌ´õ¿¡¼­ ÀÔ·Â¹Ş´Â »ö»ó °ª
+//FragColor: Ãâ·ÂÇÒ »ö»óÀÇ °ªÀ¸·Î ÇÁ·¹ÀÓ ¹öÆÛ·Î Àü´Ş µÊ. 
 
-//ë²„í…ìŠ¤ ì„¸ì´ë”ì—ê²Œì„œ ì „ë‹¬ ë°›ìŒ
+//¹öÅØ½º ¼¼ÀÌ´õ¿¡°Ô¼­ Àü´Ş ¹ŞÀ½
 in vec3 out_Normal;
 in vec3 FragPos;
 
-//ìƒ‰ìƒ ì¶œë ¥
+//»ö»ó Ãâ·Â
 out vec4 FragColor;
 
-uniform vec3 objectColor;                                                   //--- ì‘ìš© í”„ë¡œê·¸ë¨ì—ì„œ ì„¤ì •í•œ ê°ì²´ì˜ ìƒ‰ìƒ 
-uniform vec3 lightColor;													//--- ì‘ìš© í”„ë¡œê·¸ë¨ì—ì„œ ì„¤ì •í•œ ì¡°ëª… ìƒ‰ìƒ
+uniform vec3 objectColor;                                                   //--- ÀÀ¿ë ÇÁ·Î±×·¥¿¡¼­ ¼³Á¤ÇÑ °´Ã¼ÀÇ »ö»ó 
+uniform vec3 lightColor;													//--- ÀÀ¿ë ÇÁ·Î±×·¥¿¡¼­ ¼³Á¤ÇÑ Á¶¸í »ö»ó
 uniform vec3 lightPos;
 uniform vec3 cameraEye;
 
@@ -18,26 +18,26 @@ void main(void)
 {
 	vec3 Normal = out_Normal;
 
-	//ì•°ë¹„ì–¸íŠ¸ (ì£¼ë³€ì¡°ëª…(ê°„ì ‘ì¡°ëª…))
-	float ambientLight = 0.5;                                               //--- ì£¼ë³€ ì¡°ëª… ê³„ìˆ˜: 0.0 â‰¤ ambientLight â‰¤ 1.0 
-	vec3 ambient = ambientLight * lightColor;							    //--- ì£¼ë³€ ì¡°ëª…ê°’
+	//¾Úºñ¾ğÆ® (ÁÖº¯Á¶¸í(°£Á¢Á¶¸í))
+	float ambientLight = 0.5;                                               //--- ÁÖº¯ Á¶¸í °è¼ö: 0.0 ¡Â ambientLight ¡Â 1.0 
+	vec3 ambient = ambientLight * lightColor;							    //--- ÁÖº¯ Á¶¸í°ª
 
-	//ë””í“¨ì¦ˆ (ì‚°ë€ ë°˜ì‚¬ ì¡°ëª…)
-	vec3 normalVector = normalize(Normal);							// ë…¸ë§ê°’ ì •ê·œí™”
+	//µğÇ»Áî (»ê¶õ ¹İ»ç Á¶¸í)
+	vec3 normalVector = normalize(Normal);							// ³ë¸»°ª Á¤±ÔÈ­
 
-	vec3 lightDir = normalize(lightPos - FragPos);					// í‘œë©´ê³¼ ì¡°ëª… ìœ„ì¹˜ë¡œ ì¡°ëª… ë°©í–¥ ê²°ì •	
-	float diffuseLight = max(dot(normalVector, lightDir), 0.0);		// Nê³¼ Lì˜ ë‚´ì  ê°’ìœ¼ë¡œ ê°•ë„ ì¡°ì ˆ (ìŒì˜ ê°’ì„ ê°€ì§ˆ ìˆ˜ ì—†ê²Œ í•œë‹¤.) 
-	vec3 diffuse = diffuseLight * lightColor;						// ì‚°ë€ë°˜ì‚¬ì¡°ëª…ê°’ = ì‚°ë€ë°˜ì‚¬ê°’ * ì¡°ëª…ìƒ‰ìƒê°’
+	vec3 lightDir = normalize(lightPos - FragPos);					// Ç¥¸é°ú Á¶¸í À§Ä¡·Î Á¶¸í ¹æÇâ °áÁ¤	
+	float diffuseLight = max(dot(normalVector, lightDir), 0.0);		// N°ú LÀÇ ³»Àû °ªÀ¸·Î °­µµ Á¶Àı (À½ÀÇ °ªÀ» °¡Áú ¼ö ¾ø°Ô ÇÑ´Ù.) 
+	vec3 diffuse = diffuseLight * lightColor;						// »ê¶õ¹İ»çÁ¶¸í°ª = »ê¶õ¹İ»ç°ª * Á¶¸í»ö»ó°ª
 	
-	//ìŠ¤íŒ©í˜ëŸ¬ (ê±°ìš¸ ë°˜ì‚¬ ì¡°ëª…)
-	int shininess = 256;											// ê´‘íƒ(ë§¤ë„ëŸ¬ì›€) ê³„ìˆ˜
-	vec3 viewDir = normalize(cameraEye - FragPos);					// ê´€ì°°ì ë°©í–¥ ì„¤ì •
-	vec3 reflectDir = reflect(-lightDir, normalVector);				// ë°˜ì‚¬ ë°©í–¥: reflect í•¨ìˆ˜ - ì…ì‚¬ ë²¡í„°ì˜ ë°˜ì‚¬ ë°©í–¥ ê³„ì‚° 
-	float specularLight = max(dot(viewDir, reflectDir), 0.0);		// ê´€ì°° ë°©í–¥ê³¼ ë°˜ì‚¬ ë°©í–¥ì˜ ë‚´ì  ê°’ìœ¼ë¡œ ê°•ë„ ì¡°ì ˆ
-	specularLight = pow(specularLight, shininess);					// shininess ìŠ¹ìœ¼ë¡œ í•˜ì´ë¼ì´íŠ¸ í‘œí˜„
-	vec3 specular = specularLight * lightColor;						// ê±°ìš¸ ë°˜ì‚¬ ì¡°ëª…ê°’
+	//½ºÆÑÅ§·¯ (°Å¿ï ¹İ»ç Á¶¸í)
+	int shininess = 256;											// ±¤ÅÃ(¸Å²ô·¯¿ò) °è¼ö
+	vec3 viewDir = normalize(cameraEye - FragPos);					// °üÂûÀÚ ¹æÇâ ¼³Á¤
+	vec3 reflectDir = reflect(-lightDir, normalVector);				// ¹İ»ç ¹æÇâ: reflect ÇÔ¼ö - ÀÔ»ç º¤ÅÍÀÇ ¹İ»ç ¹æÇâ °è»ê 
+	float specularLight = max(dot(viewDir, reflectDir), 0.0);		// °üÂû ¹æÇâ°ú ¹İ»ç ¹æÇâÀÇ ³»Àû °ªÀ¸·Î °­µµ Á¶Àı
+	specularLight = pow(specularLight, shininess);					// shininess ½ÂÀ¸·Î ÇÏÀÌ¶óÀÌÆ® Ç¥Çö
+	vec3 specular = specularLight * lightColor;						// °Å¿ï ¹İ»ç Á¶¸í°ª
 
-	vec3 result = (ambient + diffuse + specular) * objectColor;		// ê°ì²´ì˜ ìƒ‰ê³¼ ì£¼ë³€ì¡°ëª…ê°’ì„ ê³±í•˜ì—¬ ìµœì¢… ê°ì²´ ìƒ‰ìƒ ì„¤ì •
+	vec3 result = (ambient + diffuse + specular) * objectColor;		// °´Ã¼ÀÇ »ö°ú ÁÖº¯Á¶¸í°ªÀ» °öÇÏ¿© ÃÖÁ¾ °´Ã¼ »ö»ó ¼³Á¤
 
 	FragColor = vec4 (result , 1.0);
 }

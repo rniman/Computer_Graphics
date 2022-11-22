@@ -34,7 +34,7 @@ char* filetobuf(const char* file)
 	fread(buf, length, 1, fptr); /* Read the contents of the file in to the buffer */
 	fclose(fptr); /* Close the file */
 	buf[length] = 0; /* Null terminator */
-
+	
 	return buf; /* Return the buffer */
 }
 
@@ -55,10 +55,12 @@ GLboolean make_vertexShader()
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
 	if (!result)
 	{
+		
 		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
 		std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
 		return false;
 	}
+	std::cout << vertexSource << std::endl;
 }
 
 GLboolean make_fragementShader()
@@ -72,11 +74,12 @@ GLboolean make_fragementShader()
 
 	GLint result;
 	GLchar errorLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
+	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
 	if (!result)
 	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
-		std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
+		std::cout << fragmentSource << std::endl;
+		glGetShaderInfoLog(fragmentShader, 512, NULL, errorLog);
+	//	std::cerr << "ERROR: fragement shader 컴파일 실패\n" << errorLog << std::endl;
 		return false;
 	}
 }
