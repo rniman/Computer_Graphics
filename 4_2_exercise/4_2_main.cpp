@@ -195,6 +195,7 @@ GLvoid drawScene()
 	glBindVertexArray(vao[0]);
 	glDrawArrays(GL_LINES, 0, 6);
 
+
 	//경로 그리기
 	for (int i = 0; i < 6; ++i)
 	{
@@ -203,6 +204,7 @@ GLvoid drawScene()
 		glDrawArrays(GL_LINE_LOOP, 0, route[i].size());
 	}
 	glUniform3f(objColorLocation, 0.3f, 0.2f, 0.4f);
+
 
 	//중심원(큰원)
 	glBindVertexArray(vao[1]);
@@ -241,6 +243,7 @@ GLvoid Reshape(int w, int h)
 
 GLvoid TimeEvent(int value)
 {
+
 	for(int i=0 ; i < 6 ;++i)
 		transformationRoute[i] = glm::mat4(1.0f);
 
@@ -282,7 +285,6 @@ GLvoid TimeEvent(int value)
 			transformationRoute[i] = glm::rotate(transformationRoute[i], glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 	}
-
 
 	transformationBigSphere = glm::translate(transformationBigSphere, delta);
 	for (int i = 0; i < 3; ++i)
@@ -340,16 +342,16 @@ GLvoid TimeEvent(int value)
 
 	light_trans = glm::mat4(1.0f);
 	lightPos = origin_lightPos + delta;
-	light_trans = glm::translate(light_trans, delta);
+	//light_trans = glm::translate(light_trans, delta);
 	light_trans = glm::rotate(light_trans, glm::radians(allAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-	
 	light_trans = glm::translate(light_trans, lightPos);
 	light_trans = glm::translate(light_trans, -origin_lightPos);
 	light_trans = glm::rotate(light_trans, glm::radians(light_angle), glm::vec3(0.0f, 1.0f, 0.0f));
 	light_trans = glm::translate(light_trans, origin_lightPos);
 
 	lightPos = glm::vec3(light_trans * glm::vec4(origin_lightPos, 1.0f));
-
+	//std::cout << lightPos.x << '\t' << lightPos.z << std::endl;
+	
 	camera = glm::mat4(1.0f);
 	camera = glm::lookAt(cameraEye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	camera = glm::rotate(camera, glm::radians(cameraAngle), glm::vec3(0.0f, 1.0f, 0.0f));
