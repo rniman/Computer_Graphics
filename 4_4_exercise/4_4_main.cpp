@@ -1,6 +1,10 @@
 #define _USE_MATH_DEFINES
 #include "axes.h"
 #include "read_Obj.h"
+#include <random>
+
+std::random_device rd;
+std::mt19937 gen(rd());
 
 GLvoid drawScene();
 GLvoid Reshape(int w, int h);
@@ -10,6 +14,7 @@ void initBuffer();
 
 GLvoid convert_OpenglXY_WindowXY(int& x, int& y, const float& ox, const float& oy);
 GLvoid convert_WindowXY_OpenglXY(const int& x, const int& y, float& ox, float& oy);
+GLvoid add_triangle(std::vector<glm::vec3>& pyramid_vertex,const int& step);
 
 const GLint window_w = 600, window_h = 600;
 GLfloat rColor = 0.4f, gColor = 0.4f, bColor = 0.4f;
@@ -30,53 +35,44 @@ namespace keyState
 	GLboolean a = false;
 	GLboolean e = false;
 	GLboolean l = false;
+	GLboolean s = false;
+	GLboolean _1 = false;
+	GLboolean _2 = false;
+	GLboolean _3 = false;
+	GLboolean _4 = false;
+	GLboolean _5 = false;
 }
 
 
 unsigned int pyramid_vao;
 unsigned int pyramid_vbo[2];
-glm::mat4 pyramid_trans(1.0f);
+glm::mat4 pyramid_trans[4];
 
-std::vector<GLfloat> pyramid_vertex
+std::vector<glm::vec3> pyramid_vertex
 {
-	//¹Ø¸é
-	-100.0f, 0.0f, -100.0f,
-	100.0f, 0.0f, -100.0f,
-	-100.0f, 0.0f, 100.0f,
-
-	-100.0f, 0.0f, 100.0f,
-	100.0f, 0.0f, -100.0f,
-	100.0f, 0.0f, 100.0f,
-
 	//¾Õ¸é
-	0.0f, 141.4f, 0.0f,
-	-100.0f, 0.0f, 100.0f,
-	100.0f, 0.0f, 100.0f,
+	glm::vec3(0.0f, 141.4f, 0.0f),
+	glm::vec3(-100.0f, 0.0f, 100.0f),
+	glm::vec3(100.0f, 0.0f, 100.0f),
 
-	//µÞ
-	0.0f, 141.4f, 0.0f,
-	100.0f, 0.0f, -100.0f,
-	-100.0f, 0.0f, -100.0f,
+	////µÞ
+	//glm::vec3(0.0f, 141.4f, 0.0f),
+	//glm::vec3(100.0f, 0.0f, -100.0f),
+	//glm::vec3(-100.0f, 0.0f, -100.0f),
 
-	//¿Þ
-	0.0f, 141.4f, 0.0f,
-	-100.0f, 0.0f, -100.0f,
-	-100.0f, 0.0f, 100.0f,
+	////¿Þ
+	//glm::vec3(0.0f, 141.4f, 0.0f),
+	//glm::vec3(-100.0f, 0.0f, -100.0f),
+	//glm::vec3(-100.0f, 0.0f, 100.0f ),
 
-	//¿À
-	0.0f, 141.4f, 0.0f,
-	100.0f, 0.0f, 100.0f,
-	100.0f, 0.0f, -100.0f
+	////¿À
+	//glm::vec3(0.0f, 141.4f, 0.0f),
+	//glm::vec3(100.0f, 0.0f, 100.0f),
+	//glm::vec3(100.0f, 0.0f, -100.0f)
 };
 
-std::vector<GLfloat> pyramid_normal
+std::vector<glm::vec3> pyramid_normal
 {
-	0.0f, -1.0f, 0.0f,
-	0.0f, -1.0f, 0.0f,
-	0.0f, -1.0f, 0.0f,
-	0.0f, -1.0f, 0.0f,
-	0.0f, -1.0f, 0.0f,
-	0.0f, -1.0f, 0.0f,
 };
 
 GLuint vao[1];
@@ -153,9 +149,27 @@ glm::mat4 big_trans(1.0f);
 glm::mat4 middle_trans(1.0f);
 glm::mat4 small_trans(1.0f);
 glm::vec3 big_pos = { 300.0f, 0.0f, 0.0f };
-glm::vec3 middle_pos = { 100.0f, 100.0f, 100.0f };
+glm::vec3 middle_pos = { 80.0f, 80.0f, 80.0f };
 glm::vec3 small_pos = { 0.0f, 300.0f, 0.0f };
 GLint sphere_angle = 0.0f;
+
+struct Snow
+{
+	glm::vec3 pos;
+	glm::mat4 transformation = glm::mat4(1.0f);
+	GLfloat speed;
+	GLvoid set_transformation();
+};
+GLvoid Snow::set_transformation()
+{
+	transformation = glm::mat4(1.0f);
+	transformation = glm::translate(transformation, pos);
+}
+
+std::vector<Snow> snow;
+
+int num = 0;
+int now_step = 0;
 
 int main(int argc, char** argv)
 {
@@ -166,40 +180,48 @@ int main(int argc, char** argv)
 	glutCreateWindow("Example_3_7(18¹ø)");
 
 	glewExperimental = GL_TRUE;
-	glewInit();
+	glewInit();	
 
-	for (int i = 2; i < 6; ++i)
+	pyramid_trans[0] = glm::mat4(1.0f);
+	pyramid_trans[1] = glm::mat4(1.0f);
+	pyramid_trans[2] = glm::mat4(1.0f);
+	pyramid_trans[3] = glm::mat4(1.0f);
+
+
+	add_triangle(pyramid_vertex, 0);
+
 	{
-		glm::vec3 p1 = glm::vec3(pyramid_vertex[9 * i + 3] - pyramid_vertex[9 * i],
-								 pyramid_vertex[9 * i + 4] - pyramid_vertex[9 * i + 1],
-								 pyramid_vertex[9 * i + 5] - pyramid_vertex[9 * i + 2]);
 
-		glm::vec3 p2 = glm::vec3(pyramid_vertex[9 * i + 6] - pyramid_vertex[9 * i],
-								 pyramid_vertex[9 * i + 7] - pyramid_vertex[9 * i + 1],
-								 pyramid_vertex[9 * i + 8] - pyramid_vertex[9 * i + 2]);
+		glm::vec3 p1 = pyramid_vertex[1] - pyramid_vertex[0];
+
+		glm::vec3 p2 = pyramid_vertex[2] - pyramid_vertex[0];
+
 		glm::vec3 temp;
 		temp = glm::cross(p1, p2);
-		pyramid_normal.push_back(temp.x);
-		pyramid_normal.push_back(temp.y);
-		pyramid_normal.push_back(temp.z);
-		pyramid_normal.push_back(temp.x);
-		pyramid_normal.push_back(temp.y);
-		pyramid_normal.push_back(temp.z);
-		pyramid_normal.push_back(temp.x);
-		pyramid_normal.push_back(temp.y);
-		pyramid_normal.push_back(temp.z);
+
+		for (int i = 0; i < pyramid_vertex.size() / 3; ++i)
+		{
+			pyramid_normal.push_back(temp);
+			pyramid_normal.push_back(temp);
+			pyramid_normal.push_back(temp);
+		}
 	}
-	glm::vec3 temp_avg(0.0f, 0.0f, 0.0f);
-	for (int i = 2; i < 6; ++i)
+	glBindVertexArray(pyramid_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, pyramid_vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, pyramid_normal.size() * sizeof(glm::vec3), pyramid_normal.data(), GL_STATIC_DRAW);
+
+	pyramid_trans[1] = glm::rotate(pyramid_trans[1], glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	pyramid_trans[2] = glm::rotate(pyramid_trans[2], glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	pyramid_trans[3] = glm::rotate(pyramid_trans[3], glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	std::uniform_int_distribution<int> dis(-400, 400);
+	std::uniform_int_distribution<int> dis_speed(1, 10);
+	snow.resize(50);
+	for (int i = 0; i < 50; ++i) 
 	{
-		temp_avg = temp_avg + glm::vec3(pyramid_normal[9 * i], pyramid_normal[9 * i + 1], pyramid_normal[9 * i + 2]);
-	}
-	temp_avg = glm::normalize(temp_avg);
-	for (int i = 2; i < 6; ++i)
-	{
-		pyramid_normal[9 * i] = temp_avg.x;
-		pyramid_normal[9 * i + 1] = temp_avg.y;
-		pyramid_normal[9 * i + 2] = temp_avg.z;
+		snow[i].pos = glm::vec3(dis(gen), 500.0f, dis(gen));
+		snow[i].transformation = glm::mat4(1.0f);
+		snow[i].speed = (float)dis(gen) * 0.1f;
 	}
 
 	makeCuboid(light_vertex, 10, 10);
@@ -282,12 +304,58 @@ GLvoid drawScene()
 	glDrawArrays(GL_TRIANGLES, 0, floor_vertex.size() / 3);
 
 	//ÇÇ¶ó¹Ìµå
-	glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
-
 	modelLocation = glGetUniformLocation(shaderID, "modelTransform");
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(pyramid_trans));
 	glBindVertexArray(pyramid_vao);
-	glDrawArrays(GL_TRIANGLES, 0, pyramid_vertex.size() / 3);
+	for (int i = 0; i < 4; ++i)
+	{
+		glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(pyramid_trans[i]));
+		
+		int draw_num = 1;
+		for (int i = 0; i < now_step; ++i)
+			draw_num *= 3;
+
+
+		if (now_step == 0)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 0, draw_num * 3);
+		}
+		else if (now_step == 1)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 3, draw_num * 3);
+		}
+		else if (now_step == 2)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 12, draw_num * 3);
+		}
+		else if (now_step == 3)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 39, draw_num * 3);
+		}
+		else if (now_step == 4)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 120, draw_num * 3);
+		}
+		else if (now_step == 5)
+		{
+			glUniform3f(objColorLocation, 0.7, 0.4, 0.7);
+			glDrawArrays(GL_TRIANGLES, 363, draw_num * 3);
+		}
+
+		if (now_step != 0)
+		{
+			glm::mat4 temp = pyramid_trans[i];
+			temp = glm::scale(temp, glm::vec3(0.99f, 0.99f, 0.99f));
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(temp));
+			glUniform3f(objColorLocation, 0.0, 0.0, 0.0);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		}
+
+	}
 
 	//¹ß±¤Ã¼
 	glUniform1f(ambientLocation, 1.0f);
@@ -318,6 +386,17 @@ GLvoid drawScene()
 	glBindVertexArray(small_vao);
 	glDrawArrays(GL_TRIANGLES, 0, small.outnormal.size());
 
+	if (keyState::s)
+	{
+		glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
+		modelLocation = glGetUniformLocation(shaderID, "modelTransform");
+		glBindVertexArray(small_vao);
+		for (int i = 0; i < 50; ++i)
+		{
+			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(snow[i].transformation));
+			glDrawArrays(GL_TRIANGLES, 0, small.outnormal.size());
+		}
+	}
 	glutSwapBuffers();
 }
 
@@ -359,6 +438,18 @@ GLvoid TimeEvent(int value)
 
 	small_trans = glm::rotate(small_trans, glm::radians((float)sphere_angle), glm::vec3(-1.0f, 0.0f, 0.0f));
 	small_trans = glm::translate(small_trans, small_pos);
+
+	if (keyState::s)
+	{
+		std::uniform_int_distribution<int> dis(-400, 400);
+		for (int i = 0; i < 50; ++i)
+		{
+			snow[i].pos.y -= snow[i].speed;
+			if (snow[i].pos.y < 0.0f)
+				snow[i].pos = glm::vec3(dis(gen), 500.0f, dis(gen));
+			snow[i].set_transformation();
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(100, TimeEvent, 0);
@@ -404,6 +495,34 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 	{
 		light_angle -= 10.0f;
 	}
+	else if (key == 's')
+	{
+		keyState::s = keyState::s ? false : true;
+	}
+	else if (key == '0')
+	{
+		now_step = 0;
+	}
+	else if (key == '1')
+	{
+		now_step = 1;
+	}
+	else if (key == '2')
+	{
+		now_step = 2;
+	}
+	else if (key == '3')
+	{
+		now_step = 3;
+	}
+	else if (key == '4')
+	{
+		now_step = 4;
+	}
+	else if (key == '5')
+	{
+		now_step = 5;
+	}
 }
 
 
@@ -446,12 +565,12 @@ void initBuffer()
 	glBindVertexArray(pyramid_vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, pyramid_vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, pyramid_normal.size() * sizeof(GLfloat), pyramid_normal.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, pyramid_normal.size() * sizeof(glm::vec3), pyramid_normal.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, pyramid_vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, pyramid_vertex.size() * sizeof(GLfloat), pyramid_vertex.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, pyramid_vertex.size() * sizeof(glm::vec3), pyramid_vertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
@@ -515,4 +634,55 @@ void initBuffer()
 	glBufferData(GL_ARRAY_BUFFER, small.outvertex.size() * sizeof(glm::vec3), small.outvertex.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
+}
+
+int add_num = 0;
+
+//0 - 1°³ - 3
+//1 - 4°³ = 1 * 3 + 1
+//2 - 13 = 3 * 3 + 4
+//3 - 40 = 9 * 3 + 13
+//4 - 121 = 27 * 3 + 40
+//5 - 27 * 3 * 3 + 121
+GLvoid add_triangle(std::vector<glm::vec3>& pyramid_vertex,const int& step)
+{
+	if (step == 5)
+	{
+		return;
+	}
+
+	int loop = 1;
+	for (int i = 0; i < step; ++i)
+		loop *= 3;
+
+	for (int i = 0; i <  loop; ++i)
+	{
+		glm::vec3 p0 = glm::vec3(
+			(pyramid_vertex[3 * num].x + pyramid_vertex[3 * num + 1].x) / 2,
+			(pyramid_vertex[3 * num].y + pyramid_vertex[3 * num + 1].y) / 2,
+			(pyramid_vertex[3 * num].z + pyramid_vertex[3 * num + 1].z) / 2);
+		glm::vec3 p1 = glm::vec3(
+			(pyramid_vertex[3 * num + 1].x + pyramid_vertex[3 * num + 2].x) / 2,
+			(pyramid_vertex[3 * num + 1].y + pyramid_vertex[3 * num + 2].y) / 2,
+			(pyramid_vertex[3 * num + 1].z + pyramid_vertex[3 * num + 2].z) / 2);
+		glm::vec3 p2 = glm::vec3(
+			(pyramid_vertex[3 * num + 2].x + pyramid_vertex[3 * num].x) / 2,
+			(pyramid_vertex[3 * num + 2].y + pyramid_vertex[3 * num].y) / 2,
+			(pyramid_vertex[3 * num + 2].z + pyramid_vertex[3 * num].z) / 2);
+
+		pyramid_vertex.push_back(pyramid_vertex[3 * num]);
+		pyramid_vertex.push_back(p0);
+		pyramid_vertex.push_back(p2);
+
+		pyramid_vertex.push_back(pyramid_vertex[3 * num + 1]);
+		pyramid_vertex.push_back(p1);
+		pyramid_vertex.push_back(p0);
+
+		pyramid_vertex.push_back(pyramid_vertex[3 * num + 2]);
+		pyramid_vertex.push_back(p2);
+		pyramid_vertex.push_back(p1);
+		num += 1;
+	}
+	add_triangle(pyramid_vertex, step + 1);
+	
 }
