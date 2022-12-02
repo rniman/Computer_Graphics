@@ -54,21 +54,6 @@ std::vector<glm::vec3> pyramid_vertex
 	glm::vec3(0.0f, 141.4f, 0.0f),
 	glm::vec3(-100.0f, 0.0f, 100.0f),
 	glm::vec3(100.0f, 0.0f, 100.0f),
-
-	////µÞ
-	//glm::vec3(0.0f, 141.4f, 0.0f),
-	//glm::vec3(100.0f, 0.0f, -100.0f),
-	//glm::vec3(-100.0f, 0.0f, -100.0f),
-
-	////¿Þ
-	//glm::vec3(0.0f, 141.4f, 0.0f),
-	//glm::vec3(-100.0f, 0.0f, -100.0f),
-	//glm::vec3(-100.0f, 0.0f, 100.0f ),
-
-	////¿À
-	//glm::vec3(0.0f, 141.4f, 0.0f),
-	//glm::vec3(100.0f, 0.0f, 100.0f),
-	//glm::vec3(100.0f, 0.0f, -100.0f)
 };
 
 std::vector<glm::vec3> pyramid_normal
@@ -186,7 +171,6 @@ int main(int argc, char** argv)
 	pyramid_trans[1] = glm::mat4(1.0f);
 	pyramid_trans[2] = glm::mat4(1.0f);
 	pyramid_trans[3] = glm::mat4(1.0f);
-
 
 	add_triangle(pyramid_vertex, 0);
 
@@ -348,6 +332,7 @@ GLvoid drawScene()
 
 		if (now_step != 0)
 		{
+			//´Ù¸¥ ¹æ¹ý ¾ø³ª?
 			glm::mat4 temp = pyramid_trans[i];
 			temp = glm::scale(temp, glm::vec3(0.99f, 0.99f, 0.99f));
 			glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(temp));
