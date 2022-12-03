@@ -61,7 +61,7 @@ glm::mat4 view;
 
 axes_coordination axes;
 
-glm::vec3 lightPos = {300.0f, 200.0f, 0.0f};
+glm::vec3 lightPos = {300.0f, 300.0f, 300.0f};
 glm::vec3 lightDelta = { 0.0f,0.0f,0.0f };
 glm::vec3 originLightPos = { 300.0f, 200.0f, 0.0f };
 glm::vec3 lightColor =glm::vec3(1.0f,1.0f,1.0f);
@@ -137,6 +137,40 @@ struct Texture_data
 };
 
 Texture_data texture[6];
+
+
+GLuint bg_vao;
+GLuint bg_vbo[3];
+Texture_data backGround;
+std::vector<GLfloat> bg_vertex =
+{
+	-1000.0f, 1000.0f, -1000.f,
+	-1000.0f, -1000.0f, -1000.0f,
+	1000.0f, 1000.0f, -1000.0f,
+
+	1000.0f, 1000.0f, -1000.0f,
+	-1000.0f, -1000.0f, -1000.0f,
+	1000.0f, -1000.0f, -1000.0f
+};
+std::vector<GLfloat> bg_normal =
+{
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 1.0f
+};
+std::vector<GLfloat> bg_texture =
+{
+	0.0f, 1.0f,
+	0.0f, 0.0f,
+	1.0f, 1.0f,
+
+	1.0f, 1.0f,
+	0.0f, 0.0f,
+	1.0f, 0.0f,
+};
 
 int main(int argc, char** argv)
 {
@@ -220,7 +254,7 @@ GLvoid drawScene()
 	glUniform1f(ambientLocation, 0.5f);
 
 	glUniform3f(viewPosLocation, camera_eye.x, camera_eye.y, camera_eye.z);
-	glUniform3f(objColorLocation, 0.0f, 0.0f, 0.0f);
+	glUniform3f(objColorLocation, 1.0f, 1.0f, 1.0f);
 
 	glClearColor(rColor, gColor, bColor, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -229,6 +263,15 @@ GLvoid drawScene()
 
 	//랜더링 파이프라인에 세이더 불러오기
 	glUseProgram(shaderID);
+
+	glm::mat4 temp(1.0f);
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(temp));
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(temp));
+	//glUniformMatrix4fv(projLocation, 1, GL_FALSE, glm::value_ptr(temp));
+	glBindVertexArray(bg_vao);
+	glBindTexture(GL_TEXTURE_2D, backGround.texture);
+	glDrawArrays(GL_TRIANGLES, 0, bg_vertex.size() / 3);
+
 
 	//카메라 변환 적용
 	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(camera));
@@ -355,6 +398,26 @@ GLvoid KeyEvent(unsigned char key, int x, int y)
 
 void initBuffer()
 {
+	glGenVertexArrays(1, &bg_vao);
+	glGenBuffers(3, bg_vbo);
+
+	glBindVertexArray(bg_vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, bg_vbo[2]);
+	glBufferData(GL_ARRAY_BUFFER, bg_texture.size() * sizeof(GLfloat), bg_texture.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, bg_vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, bg_normal.size() * sizeof(GLfloat), bg_normal.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, bg_vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, bg_vertex.size() * sizeof(GLfloat), bg_vertex.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(2, vbo);
 
@@ -437,20 +500,24 @@ void initBuffer()
 
 GLvoid initTexture()
 {
+	glGenTextures(1, &backGround.texture);
+	glBindTexture(GL_TEXTURE_2D, backGround.texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	stbi_set_flip_vertically_on_load(true);
+	backGround.data = stbi_load("bg.jpg", &backGround.img_width, &backGround.img_height, &backGround.img_channel, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, backGround.img_width, backGround.img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, backGround.data);
+
+	//stbi_set_flip_vertically_on_load(false);
 	glGenTextures(1, &texture[0].texture);
 	glBindTexture(GL_TEXTURE_2D, texture[0].texture);
-	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	texture[0].data = stbi_load("texture_00.jpg", &texture[0].img_width, &texture[0].img_height, &texture[0].img_channel, 0);
-	
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, texture[0].img_width, texture[0].img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture[0].data);
 
 	glGenTextures(1, &texture[1].texture);
 	glBindTexture(GL_TEXTURE_2D, texture[1].texture);
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	texture[1].data = stbi_load("texture_01.jpg", &texture[1].img_width, &texture[1].img_height, &texture[1].img_channel, 0);
-
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, texture[1].img_width, texture[1].img_height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture[1].data);
 
 	glGenTextures(1, &texture[2].texture);
